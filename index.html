@@ -857,7 +857,7 @@ body {
         </div>
         <table class="data-table">
           <thead>
-            <tr><th>名称</th><th>图标</th><th>排序</th><th>服务数</th><th>操作</th></tr>
+            <tr><th>名称</th><th>排序</th><th>服务数</th><th>操作</th></tr>
           </thead>
           <tbody id="categories-tbody"></tbody>
         </table>
@@ -1035,15 +1035,9 @@ body {
         <label class="label">分类名称 *</label>
         <input type="text" class="input" id="category-name" placeholder="如：媒体娱乐">
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="label">图标（1-2字符）</label>
-          <input type="text" class="input" id="category-icon" placeholder="如：MV" maxlength="4">
-        </div>
-        <div class="form-group">
-          <label class="label">排序</label>
-          <input type="number" class="input" id="category-sort" value="0" min="0">
-        </div>
+      <div class="form-group">
+        <label class="label">排序</label>
+        <input type="number" class="input" id="category-sort" value="0" min="0">
       </div>
     </div>
     <div class="modal-footer">
@@ -1070,12 +1064,12 @@ const DEFAULT_DATA = {
     password: 'admin123'
   },
   categories: [
-    { id: 'c1', name: '常用', icon: '★', sort: 0 },
-    { id: 'c2', name: '媒体娱乐', icon: 'MV', sort: 1 },
-    { id: 'c3', name: '存储同步', icon: 'DB', sort: 2 },
-    { id: 'c4', name: '下载工具', icon: 'DL', sort: 3 },
-    { id: 'c5', name: '系统管理', icon: 'AD', sort: 4 },
-    { id: 'c6', name: '网络服务', icon: 'NET', sort: 5 }
+    { id: 'c1', name: '常用', sort: 0 },
+    { id: 'c2', name: '媒体娱乐', sort: 1 },
+    { id: 'c3', name: '存储同步', sort: 2 },
+    { id: 'c4', name: '下载工具', sort: 3 },
+    { id: 'c5', name: '系统管理', sort: 4 },
+    { id: 'c6', name: '网络服务', sort: 5 }
   ],
   links: [
     { id: 'l1', name: 'Jellyfin', url: 'http://nas.local:8096', icon: 'JF', iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellyfin.png', color: '#9333EA', desc: '开源媒体服务器', categoryId: 'c2', sort: 0 },
@@ -1530,7 +1524,6 @@ function renderCategoriesTable() {
     const count = data.links.filter(l => l.categoryId === cat.id).length;
     html += '<tr>';
     html += '<td>' + escapeHtml(cat.name) + '</td>';
-    html += '<td>' + escapeHtml(cat.icon || '-') + '</td>';
     html += '<td>' + cat.sort + '</td>';
     html += '<td>' + count + '</td>';
     html += '<td><div class="table-actions">';
@@ -1539,7 +1532,7 @@ function renderCategoriesTable() {
     html += '</div></td></tr>';
   });
   if (!html) {
-    html = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">暂无分类</td></tr>';
+    html = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted);">暂无分类</td></tr>';
   }
   tbody.innerHTML = html;
 }
@@ -1626,7 +1619,6 @@ function openCategoryModal() {
   document.getElementById('category-modal-title').textContent = '添加分类';
   document.getElementById('category-id').value = '';
   document.getElementById('category-name').value = '';
-  document.getElementById('category-icon').value = '';
   document.getElementById('category-sort').value = data.categories.length;
   document.getElementById('category-modal').classList.add('active');
 }
@@ -1637,7 +1629,6 @@ function editCategory(id) {
   document.getElementById('category-modal-title').textContent = '编辑分类';
   document.getElementById('category-id').value = cat.id;
   document.getElementById('category-name').value = cat.name;
-  document.getElementById('category-icon').value = cat.icon || '';
   document.getElementById('category-sort').value = cat.sort;
   document.getElementById('category-modal').classList.add('active');
 }
@@ -1649,7 +1640,6 @@ async function saveCategory() {
 
   const catData = {
     name: name,
-    icon: document.getElementById('category-icon').value.trim(),
     sort: parseInt(document.getElementById('category-sort').value) || 0
   };
 
