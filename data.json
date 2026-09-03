@@ -62,17 +62,6 @@
       "sort": 0
     },
     {
-      "id": "l7",
-      "name": "Alist",
-      "url": "http://nas.local:5244",
-      "icon": "",
-      "iconUrl": "https://raw.githubusercontent.com/xinya585/nas-nav/main/icons/1788447659158_alist_png.png",
-      "color": "#ffffff",
-      "desc": "多网盘聚合挂载",
-      "categoryId": "c3",
-      "sort": 1
-    },
-    {
       "id": "l8",
       "name": "Nginx Proxy Manager",
       "url": "http://nas.local:81",
