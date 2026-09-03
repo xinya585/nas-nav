@@ -1349,39 +1349,34 @@ function setSyncState(state) {
 }
 
 async function initData() {
-  if (isGhConfigured()) {
-    setSyncState('syncing');
-    const result = await fetchDataFromGithub();
-    if (result.ok) {
-      if (result.data) {
-        data = result.data;
-        fileSha = result.sha;
-      } else {
-        data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-        fileSha = null;
-        // 首次使用，推送默认数据到 GitHub
-        await pushDataToGithub(data);
-      }
-      saveLocalData();
-      setSyncState('synced');
-    } else {
-      // GitHub 拉取失败，回退本地
-      data = loadLocalData();
-      setSyncState('error');
-      toast('从 GitHub 加载失败，使用本地数据', 'error');
-    }
+  setSyncState('syncing');
+  const result = await fetchDataFromGithub();
+  if (result.ok && result.data) {
+    data = result.data;
+    fileSha = result.sha;
+    saveLocalData();
+    setSyncState('synced');
+  } else if (result.ok && !result.data) {
+    // 文件不存在，用默认数据
+    data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    fileSha = null;
+    saveLocalData();
+    setSyncState('synced');
+    // 尝试推送默认数据
+    pushDataToGithub(data).catch(() => {});
   } else {
+    // 加载失败，回退本地
     data = loadLocalData();
-    setSyncState('local');
+    if (isGhConfigured()) {
+      setSyncState('error');
+    } else {
+      setSyncState('local');
+    }
   }
   renderAll();
 }
 
 async function refreshFromGithub() {
-  if (!isGhConfigured()) {
-    toast('未配置 GitHub', 'error');
-    return;
-  }
   setSyncState('syncing');
   const result = await fetchDataFromGithub();
   if (result.ok && result.data) {
@@ -1392,7 +1387,11 @@ async function refreshFromGithub() {
     renderAll();
     toast('已从 GitHub 刷新', 'success');
   } else {
-    setSyncState('error');
+    if (isGhConfigured()) {
+      setSyncState('error');
+    } else {
+      setSyncState('local');
+    }
     toast('刷新失败', 'error');
   }
 }
