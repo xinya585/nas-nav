@@ -56,7 +56,8 @@ export async function onRequest(context) {
       }
 
       const json = await resp.json();
-      const content = JSON.parse(atob(json.content));
+      const bytes = Uint8Array.from(atob(json.content), c => c.charCodeAt(0));
+      const content = JSON.parse(new TextDecoder().decode(bytes));
       return new Response(
         JSON.stringify({ ok: true, data: content, sha: json.sha }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
