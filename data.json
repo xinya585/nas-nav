@@ -143,7 +143,7 @@
       "name": "Cockpit",
       "url": "http://nas.local:9090",
       "icon": "",
-      "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/cockpit.png",
+      "iconUrl": "https://raw.githubusercontent.com/xinya585/nas-nav/main/icons/1788447717475_cockpit_png.png",
       "color": "#ffffff",
       "desc": "服务器 Web 管理",
       "categoryId": "c5",
