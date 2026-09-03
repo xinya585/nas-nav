@@ -44,7 +44,7 @@
       "name": "Jellyfin",
       "url": "http://nas.local:8096",
       "icon": "",
-      "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellyfin.png",
+      "iconUrl": "https://raw.githubusercontent.com/xinya585/nas-nav/main/icons/1788447292168_jellyfin_png.png",
       "color": "#ffffff",
       "desc": "开源媒体服务器",
       "categoryId": "c2",
