@@ -406,6 +406,16 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* 无描述时：名称垂直居中 */
+.link-card.no-desc .card-info {
+  display: flex;
+  align-items: center;
+}
+.link-card.no-desc .card-name {
+  margin-bottom: 0;
+  text-align: center;
+  width: 100%;
+}
 .empty-state {
   text-align: center;
   padding: 60px 20px;
@@ -1648,15 +1658,19 @@ function renderGrid() {
     links.forEach(link => {
       const iconText = link.icon || link.name.charAt(0).toUpperCase();
       const hasIconUrl = !!link.iconUrl;
+      const hasDesc = !!(link.desc && link.desc.trim());
       const iconHtml = hasIconUrl
         ? '<img src="' + escapeAttr(link.iconUrl) + '" alt="' + escapeAttr(link.name) + '" class="card-icon-img" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
         : '';
       const textIconStyle = hasIconUrl ? ' style="display:none;"' : '';
-      html += '<a href="' + escapeAttr(link.url) + '" target="_blank" rel="noopener noreferrer" class="link-card" style="--card-accent:' + (link.color || '#059669') + '">';
+      const cardClass = 'link-card' + (hasDesc ? '' : ' no-desc');
+      html += '<a href="' + escapeAttr(link.url) + '" target="_blank" rel="noopener noreferrer" class="' + cardClass + '" style="--card-accent:' + (link.color || '#059669') + '">';
       html += '<div class="card-icon-wrap">' + iconHtml + '<div class="card-icon"' + textIconStyle + '>' + escapeHtml(iconText) + '</div></div>';
       html += '<div class="card-info">';
       html += '<div class="card-name">' + escapeHtml(link.name) + '</div>';
-      html += '<div class="card-desc">' + escapeHtml(link.desc || link.url) + '</div>';
+      if (hasDesc) {
+        html += '<div class="card-desc">' + escapeHtml(link.desc) + '</div>';
+      }
       html += '</div></a>';
     });
     html += '</div></div>';
