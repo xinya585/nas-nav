@@ -53,11 +53,11 @@
     {
       "id": "l4",
       "name": "qBittorrent",
-      "url": "http://nas.local:8081",
+      "url": "http://zta.cc.cd:41003",
       "icon": "",
       "iconUrl": "https://raw.githubusercontent.com/xinya585/nas-nav/main/icons/1788447606859_qbittorrent_png.png",
       "color": "#ffffff",
-      "desc": "BT 下载客户端",
+      "desc": "PT 下载客户端",
       "categoryId": "c4",
       "sort": 0
     },
