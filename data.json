@@ -148,6 +148,17 @@
       "desc": "服务器 Web 管理",
       "categoryId": "c5",
       "sort": 2
+    },
+    {
+      "id": "id_mtlnmw1poekux",
+      "sort": 10,
+      "name": "Emby",
+      "url": "http://zta.cc.cd:8096",
+      "icon": "",
+      "iconUrl": "https://raw.githubusercontent.com/xinya585/nas-nav/main/icons/1788447770705_emby_png.png",
+      "color": "#ffffff",
+      "categoryId": "c2",
+      "desc": ""
     }
   ]
 }
