@@ -4,7 +4,8 @@
     "heroTitle": "个人导航收藏页",
     "heroSubtitle": "快速访问所有自托管服务",
     "footer": "NAS Navigation · 部署于 Cloudflare Pages",
-    "password": "admin123"
+    "password": "admin123",
+    "icp": ""
   },
   "categories": [
     {
