@@ -68,6 +68,17 @@
       "desc": "群晖NAS管理"
     },
     {
+      "id": "id_mtlpcmyo14w5i",
+      "sort": 4,
+      "name": "File Station",
+      "url": "http://zta.cc.cd:7000",
+      "icon": "",
+      "iconUrl": "https://raw.githubusercontent.com/xinya585/nas-nav/main/icons/1788450636361_File_Station_png.png",
+      "color": "#ffffff",
+      "categoryId": "c3",
+      "desc": "群晖文件管理"
+    },
+    {
       "id": "id_mtlnmw1poekux",
       "sort": 10,
       "name": "Emby",
