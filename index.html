@@ -1043,6 +1043,7 @@ body {
           <input type="text" class="input" id="link-icon-url" placeholder="如：https://example.com/icon.png" style="flex:1;">
           <input type="file" id="link-icon-file" accept="image/*" style="display:none;" onchange="handleIconUpload(this)">
           <button type="button" class="btn" style="white-space:nowrap;" onclick="document.getElementById('link-icon-file').click()">上传图片</button>
+          <button type="button" class="btn" style="white-space:nowrap;" onclick="openIconPicker()">从库选择</button>
         </div>
         <div id="icon-upload-status" style="font-size:12px;color:var(--text-muted);margin-top:4px;display:none;"></div>
         <div id="icon-preview-wrap" style="margin-top:8px;display:none;align-items:center;gap:8px;">
@@ -1093,6 +1094,25 @@ body {
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('category-modal')">取消</button>
       <button class="btn btn-primary" onclick="saveCategory()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 图标选择器模态框 -->
+<div class="modal-overlay" id="icon-picker-modal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <h3>从库选择图标</h3>
+      <button class="modal-close" onclick="closeModal('icon-picker-modal')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="icon-picker-status" style="text-align:center;padding:20px;color:var(--text-muted);font-size:14px;">正在加载图标库...</div>
+      <div id="icon-picker-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:12px;max-height:400px;overflow-y:auto;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('icon-picker-modal')">关闭</button>
     </div>
   </div>
 </div>
@@ -1922,6 +1942,80 @@ async function handleIconUpload(input) {
   } finally {
     input.value = '';
   }
+}
+
+// ===== 从库选择图标 =====
+function openIconPicker() {
+  if (!isGhConfigured()) {
+    toast('请先在「GitHub 配置」中填写 Token', 'error');
+    return;
+  }
+  document.getElementById('icon-picker-modal').classList.add('active');
+  document.getElementById('icon-picker-status').style.display = 'block';
+  document.getElementById('icon-picker-status').textContent = '正在加载图标库...';
+  document.getElementById('icon-picker-grid').innerHTML = '';
+  loadIconsFromRepo();
+}
+
+async function loadIconsFromRepo() {
+  const cfg = getGhConfig();
+  const statusEl = document.getElementById('icon-picker-status');
+  const gridEl = document.getElementById('icon-picker-grid');
+
+  try {
+    const resp = await fetch(
+      'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/icons?ref=' + (cfg.branch || 'main'),
+      {
+        headers: {
+          'Authorization': 'token ' + cfg.token,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      }
+    );
+
+    if (!resp.ok) {
+      if (resp.status === 404) {
+        statusEl.textContent = '图标库为空，请先上传图标';
+      } else {
+        statusEl.textContent = '加载失败 (' + resp.status + ')';
+      }
+      return;
+    }
+
+    const files = await resp.json();
+    if (!Array.isArray(files) || files.length === 0) {
+      statusEl.textContent = '图标库为空，请先上传图标';
+      return;
+    }
+
+    statusEl.style.display = 'none';
+    let html = '';
+    files.forEach(f => {
+      if (f.type === 'file' && /\.(png|jpg|jpeg|gif|svg|webp)$/i.test(f.name)) {
+        const rawUrl = 'https://raw.githubusercontent.com/' + cfg.owner + '/' + cfg.repo + '/' + (cfg.branch || 'main') + '/icons/' + f.name;
+        html += '<div class="icon-picker-item" onclick="selectRepoIcon(\'' + rawUrl.replace(/'/g, "\\'") + '\')" title="' + escapeAttr(f.name) + '" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor=\'var(--accent)\';this.style.background=\'var(--bg-hover)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'transparent\'">'
+          + '<img src="' + escapeAttr(rawUrl) + '" alt="' + escapeAttr(f.name) + '" style="width:48px;height:48px;object-fit:contain;" loading="lazy">'
+          + '<span style="font-size:10px;color:var(--text-muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(f.name.substring(0, 12)) + '</span>'
+          + '</div>';
+      }
+    });
+
+    if (html === '') {
+      statusEl.style.display = 'block';
+      statusEl.textContent = '图标库中没有图片文件';
+    } else {
+      gridEl.innerHTML = html;
+    }
+  } catch (err) {
+    statusEl.textContent = '加载失败：' + err.message;
+  }
+}
+
+function selectRepoIcon(url) {
+  document.getElementById('link-icon-url').value = url;
+  showIconPreview(url);
+  closeModal('icon-picker-modal');
+  toast('已选择图标', 'success');
 }
 
 function populateCategorySelect(selected) {
