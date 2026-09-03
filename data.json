@@ -87,9 +87,9 @@
       "id": "l6",
       "name": "AdGuard Home",
       "url": "http://nas.local:3000",
-      "icon": "AG",
+      "icon": "",
       "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/adguard-home.png",
-      "color": "#FFFFFF",
+      "color": "#ffffff",
       "desc": "网络广告过滤",
       "categoryId": "c6",
       "sort": 0
