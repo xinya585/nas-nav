@@ -58,7 +58,9 @@ export async function onRequest(context) {
       }
 
       const json = await resp.json();
-      const bytes = Uint8Array.from(atob(json.content), c => c.charCodeAt(0));
+      // GitHub 返回的 base64 可能包含换行符，先清理
+      const cleanB64 = json.content.replace(/\s/g, '');
+      const bytes = Uint8Array.from(atob(cleanB64), c => c.charCodeAt(0));
       const content = JSON.parse(new TextDecoder().decode(bytes));
       return new Response(
         JSON.stringify({ ok: true, data: content, sha: json.sha }),
