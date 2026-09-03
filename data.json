@@ -142,9 +142,9 @@
       "id": "l9",
       "name": "Cockpit",
       "url": "http://nas.local:9090",
-      "icon": "CK",
+      "icon": "",
       "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/cockpit.png",
-      "color": "#FFFFFF",
+      "color": "#ffffff",
       "desc": "服务器 Web 管理",
       "categoryId": "c5",
       "sort": 2
