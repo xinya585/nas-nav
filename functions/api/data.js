@@ -32,6 +32,7 @@ export async function onRequest(context) {
   const ghHeaders = {
     'Authorization': `token ${token}`,
     'Accept': 'application/vnd.github.v3+json',
+    'User-Agent': 'nas-nav-cloudflare-function',
   };
 
   try {
