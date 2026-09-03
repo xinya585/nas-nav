@@ -887,8 +887,28 @@ body {
           </div>
           <div class="form-group">
             <label class="label">Personal Access Token</label>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+              <button type="button" class="btn" style="white-space:nowrap;" onclick="startGithubDeviceFlow()">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style="margin-right:4px;vertical-align:middle;"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                GitHub 登录获取 Token
+              </button>
+              <span style="font-size:12px;color:var(--text-muted);">推荐方式，自动获取带 repo 权限的 Token</span>
+            </div>
             <input type="password" class="input" id="gh-token" placeholder="ghp_xxxxxxxxxxxx">
             <p class="hint">Token 仅保存在当前浏览器，不会上传到任何服务器</p>
+          </div>
+          <div id="device-flow-panel" style="display:none;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;">
+            <div style="font-weight:600;margin-bottom:8px;">GitHub 设备授权</div>
+            <div style="margin-bottom:12px;font-size:14px;">
+              请在浏览器中打开 <a href="https://github.com/login/device" target="_blank" style="color:var(--accent);font-weight:600;">https://github.com/login/device</a>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+              <span style="font-size:13px;color:var(--text-muted);">输入验证码：</span>
+              <code id="device-flow-code" style="font-size:20px;font-weight:700;letter-spacing:2px;background:var(--bg);padding:6px 16px;border-radius:6px;border:1px solid var(--border);"></code>
+              <button type="button" class="btn" style="font-size:12px;padding:4px 10px;" onclick="copyDeviceCode()">复制</button>
+            </div>
+            <div id="device-flow-status" style="font-size:13px;color:var(--text-muted);">等待授权中...</div>
+            <button type="button" class="btn" style="margin-top:12px;font-size:12px;" onclick="cancelDeviceFlow()">取消</button>
           </div>
           <div class="form-group">
             <label class="label">数据文件路径</label>
@@ -998,7 +1018,16 @@ body {
       </div>
       <div class="form-group">
         <label class="label">图标 URL（可选，优先显示图片）</label>
-        <input type="text" class="input" id="link-icon-url" placeholder="如：https://example.com/icon.png">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" class="input" id="link-icon-url" placeholder="如：https://example.com/icon.png" style="flex:1;">
+          <input type="file" id="link-icon-file" accept="image/*" style="display:none;" onchange="handleIconUpload(this)">
+          <button type="button" class="btn" style="white-space:nowrap;" onclick="document.getElementById('link-icon-file').click()">上传图片</button>
+        </div>
+        <div id="icon-upload-status" style="font-size:12px;color:var(--text-muted);margin-top:4px;display:none;"></div>
+        <div id="icon-preview-wrap" style="margin-top:8px;display:none;align-items:center;gap:8px;">
+          <img id="icon-preview" style="width:40px;height:40px;border-radius:6px;object-fit:cover;">
+          <span style="font-size:12px;color:var(--text-muted);">图标预览</span>
+        </div>
       </div>
       <div class="form-group">
         <label class="label">URL 地址 *</label>
@@ -1547,6 +1576,8 @@ function openLinkModal() {
   document.getElementById('link-color').value = '#059669';
   document.getElementById('link-url').value = '';
   document.getElementById('link-desc').value = '';
+  setIconUploadStatus('', false);
+  showIconPreview('');
   populateCategorySelect();
   document.getElementById('link-modal').classList.add('active');
 }
@@ -1564,6 +1595,114 @@ function editLink(id) {
   document.getElementById('link-desc').value = link.desc || '';
   populateCategorySelect(link.categoryId);
   document.getElementById('link-modal').classList.add('active');
+  showIconPreview(link.iconUrl);
+}
+
+// ===== 图标上传到 GitHub =====
+function showIconPreview(url) {
+  const wrap = document.getElementById('icon-preview-wrap');
+  const img = document.getElementById('icon-preview');
+  if (url) {
+    img.src = url;
+    wrap.style.display = 'flex';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+function setIconUploadStatus(msg, isError) {
+  const el = document.getElementById('icon-upload-status');
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+  el.style.color = isError ? '#dc2626' : 'var(--text-muted)';
+}
+
+function compressImage(file, maxSize) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxSize || h > maxSize) {
+          const ratio = Math.min(maxSize / w, maxSize / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => resolve(blob), 'image/png', 0.9);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleIconUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    setIconUploadStatus('请选择图片文件', true);
+    return;
+  }
+  if (!isGhConfigured()) {
+    setIconUploadStatus('请先在「GitHub 配置」中填写 Token 后再上传图片', true);
+    input.value = '';
+    return;
+  }
+
+  setIconUploadStatus('正在压缩并上传...', false);
+
+  try {
+    const blob = await compressImage(file, 128);
+    const arrayBuffer = await blob.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+
+    const cfg = getGhConfig();
+    const timestamp = Date.now();
+    const ext = file.name.split('.').pop() || 'png';
+    const safeName = file.name.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 20);
+    const path = 'icons/' + timestamp + '_' + safeName + '.png';
+
+    const resp = await fetch(
+      'https://api.github.com/repos/' + cfg.username + '/' + cfg.repo + '/contents/' + path,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'token ' + cfg.token,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: 'Upload icon: ' + path,
+          content: base64,
+          branch: cfg.branch || 'main'
+        })
+      }
+    );
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.message || '上传失败 (' + resp.status + ')');
+    }
+
+    const rawUrl = 'https://raw.githubusercontent.com/' + cfg.username + '/' + cfg.repo + '/' + (cfg.branch || 'main') + '/' + path;
+    document.getElementById('link-icon-url').value = rawUrl;
+    showIconPreview(rawUrl);
+    setIconUploadStatus('上传成功', false);
+    toast('图标上传成功', 'success');
+  } catch (err) {
+    setIconUploadStatus('上传失败：' + err.message, true);
+    toast('图标上传失败：' + err.message, 'error');
+  } finally {
+    input.value = '';
+  }
 }
 
 function populateCategorySelect(selected) {
@@ -1738,6 +1877,122 @@ async function testGithubConnection() {
   } else {
     toast('连接失败：' + result.reason, 'error');
   }
+}
+
+// ===== GitHub Device Flow 登录 =====
+const GITHUB_CLIENT_ID = 'Ov23liz7VwOys56PryIZ';
+let deviceFlowTimer = null;
+
+async function startGithubDeviceFlow() {
+  // 检查用户名和仓库是否已填写
+  const owner = document.getElementById('gh-owner').value.trim();
+  const repo = document.getElementById('gh-repo').value.trim();
+  if (!owner || !repo) {
+    toast('请先填写 GitHub 用户名和仓库名', 'error');
+    return;
+  }
+
+  try {
+    // 请求 device code
+    const resp = await fetch('https://github.com/login/device/code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        client_id: GITHUB_CLIENT_ID,
+        scope: 'repo'
+      })
+    });
+    const result = await resp.json();
+    if (!resp.ok) {
+      throw new Error(result.error_description || result.error || '请求失败');
+    }
+
+    // 显示授权面板
+    document.getElementById('device-flow-panel').style.display = 'block';
+    document.getElementById('device-flow-code').textContent = result.user_code;
+    document.getElementById('device-flow-status').textContent = '请在 GitHub 页面输入验证码并授权...';
+
+    // 自动复制验证码
+    copyDeviceCode();
+
+    // 轮询 access token
+    const interval = (result.interval || 5) * 1000;
+    const deviceCode = result.device_code;
+
+    if (deviceFlowTimer) clearInterval(deviceFlowTimer);
+    deviceFlowTimer = setInterval(async () => {
+      try {
+        const tokenResp = await fetch('https://github.com/login/oauth/access_token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            client_id: GITHUB_CLIENT_ID,
+            device_code: deviceCode,
+            grant_type: 'urn:ietf:params:oauth:grant-type:device_code'
+          })
+        });
+        const tokenResult = await tokenResp.json();
+
+        if (tokenResult.access_token) {
+          // 成功获取 token
+          clearInterval(deviceFlowTimer);
+          deviceFlowTimer = null;
+          document.getElementById('gh-token').value = tokenResult.access_token;
+          document.getElementById('device-flow-status').textContent = '授权成功！Token 已填入，点击保存即可。';
+          document.getElementById('device-flow-panel').style.display = 'none';
+          toast('GitHub 授权成功，Token 已获取', 'success');
+          // 自动保存
+          saveGithubConfig();
+        } else if (tokenResult.error === 'authorization_pending') {
+          document.getElementById('device-flow-status').textContent = '等待授权中...请在 GitHub 页面完成授权';
+        } else if (tokenResult.error === 'slow_down') {
+          document.getElementById('device-flow-status').textContent = '授权进行中...';
+        } else if (tokenResult.error === 'expired_token') {
+          clearInterval(deviceFlowTimer);
+          deviceFlowTimer = null;
+          document.getElementById('device-flow-status').textContent = '验证码已过期，请重新开始';
+          toast('验证码已过期，请重试', 'error');
+        } else if (tokenResult.error === 'access_denied') {
+          clearInterval(deviceFlowTimer);
+          deviceFlowTimer = null;
+          document.getElementById('device-flow-status').textContent = '授权已取消';
+          toast('授权已取消', 'error');
+        }
+      } catch (e) {
+        console.error('Device flow poll error:', e);
+      }
+    }, interval);
+
+  } catch (err) {
+    toast('启动 GitHub 登录失败：' + err.message, 'error');
+  }
+}
+
+function copyDeviceCode() {
+  const code = document.getElementById('device-flow-code').textContent;
+  if (code) {
+    navigator.clipboard.writeText(code).then(() => {
+      toast('验证码已复制', 'success');
+    }).catch(() => {
+      // 降级方案
+      const textarea = document.createElement('textarea');
+      textarea.value = code;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      toast('验证码已复制', 'success');
+    });
+  }
+}
+
+function cancelDeviceFlow() {
+  if (deviceFlowTimer) {
+    clearInterval(deviceFlowTimer);
+    deviceFlowTimer = null;
+  }
+  document.getElementById('device-flow-panel').style.display = 'none';
+  toast('已取消 GitHub 登录', 'info');
 }
 
 // ===== 后台：设置 =====
