@@ -767,6 +767,7 @@ body {
 
   <footer class="footer">
     <span id="footer-text">NAS Navigation · 部署于 Cloudflare Pages</span>
+    <span id="footer-icp" style="display:none;margin-left:12px;"></span>
   </footer>
 </div>
 
@@ -967,6 +968,10 @@ body {
             <input type="text" class="input" id="setting-footer">
           </div>
           <div class="form-group">
+            <label class="label">备案号（可选，显示在页脚）</label>
+            <input type="text" class="input" id="setting-icp" placeholder="如：京ICP备12345678号">
+          </div>
+          <div class="form-group">
             <label class="label">修改管理员密码（留空则不修改）</label>
             <input type="password" class="input" id="setting-password" placeholder="输入新密码">
           </div>
@@ -1133,6 +1138,7 @@ const DEFAULT_DATA = {
     heroTitle: '我的家庭服务中心',
     heroSubtitle: '快速访问所有自托管服务',
     footer: 'NAS Navigation · 部署于 Cloudflare Pages',
+    icp: '',
     password: 'admin123'
   },
   categories: [
@@ -1420,6 +1426,17 @@ function renderHome() {
   if ($('hero-title')) $('hero-title').textContent = data.settings.heroTitle;
   if ($('hero-subtitle')) $('hero-subtitle').textContent = data.settings.heroSubtitle;
   if ($('footer-text')) $('footer-text').textContent = data.settings.footer;
+  const icpEl = $('footer-icp');
+  if (icpEl) {
+    if (data.settings.icp) {
+      icpEl.textContent = data.settings.icp;
+      icpEl.style.display = 'inline';
+      icpEl.style.cursor = 'pointer';
+      icpEl.onclick = () => window.open('https://beian.miit.gov.cn/', '_blank');
+    } else {
+      icpEl.style.display = 'none';
+    }
+  }
   if ($('service-count')) $('service-count').textContent = data.links.length + ' 服务';
   if ($('category-count')) $('category-count').textContent = data.categories.length + ' 分类';
   renderCategoryBar();
@@ -2342,6 +2359,7 @@ function loadSettingsForm() {
   document.getElementById('setting-hero-title').value = data.settings.heroTitle;
   document.getElementById('setting-hero-subtitle').value = data.settings.heroSubtitle;
   document.getElementById('setting-footer').value = data.settings.footer;
+  document.getElementById('setting-icp').value = data.settings.icp || '';
   document.getElementById('setting-password').value = '';
 }
 
@@ -2350,6 +2368,7 @@ async function saveSettings() {
   data.settings.heroTitle = document.getElementById('setting-hero-title').value.trim() || '我的家庭服务中心';
   data.settings.heroSubtitle = document.getElementById('setting-hero-subtitle').value.trim() || '';
   data.settings.footer = document.getElementById('setting-footer').value.trim() || '';
+  data.settings.icp = document.getElementById('setting-icp').value.trim() || '';
   const newPwd = document.getElementById('setting-password').value;
   if (newPwd) data.settings.password = newPwd;
   renderAll();
