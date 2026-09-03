@@ -40,17 +40,6 @@
   ],
   "links": [
     {
-      "id": "l1",
-      "name": "Jellyfin",
-      "url": "http://nas.local:8096",
-      "icon": "",
-      "iconUrl": "https://raw.githubusercontent.com/xinya585/nas-nav/main/icons/1788447292168_jellyfin_png.png",
-      "color": "#ffffff",
-      "desc": "开源媒体服务器",
-      "categoryId": "c2",
-      "sort": 0
-    },
-    {
       "id": "l2",
       "name": "Nextcloud",
       "url": "http://nas.local:8080",
