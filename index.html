@@ -1052,7 +1052,11 @@ body {
       </div>
       <div class="form-group">
         <label class="label">URL 地址 *</label>
-        <input type="text" class="input" id="link-url" placeholder="如：http://192.168.1.10:8096">
+        <div style="display:flex;gap:8px;">
+          <input type="text" class="input" id="link-url" placeholder="如：http://192.168.1.10:8096" style="flex:1;">
+          <button type="button" class="btn" style="white-space:nowrap;" onclick="autoFetchIcon()" title="根据 URL 自动获取网站图标">🔍 获取图标</button>
+        </div>
+        <div id="auto-icon-status" style="font-size:12px;color:var(--text-muted);margin-top:4px;display:none;"></div>
       </div>
       <div class="form-group">
         <label class="label">所属分类 *</label>
@@ -1921,6 +1925,75 @@ async function handleIconUpload(input) {
   } finally {
     input.value = '';
   }
+}
+
+function autoFetchIcon() {
+  const urlInput = document.getElementById('link-url');
+  const url = urlInput.value.trim();
+  const statusEl = document.getElementById('auto-icon-status');
+
+  if (!url) {
+    setAutoIconStatus('请先填写 URL 地址', true);
+    return;
+  }
+
+  // 提取域名
+  let hostname = '';
+  try {
+    // 补全协议
+    let fullUrl = url;
+    if (!/^https?:\/\//i.test(fullUrl)) {
+      fullUrl = 'http://' + fullUrl;
+    }
+    const parsed = new URL(fullUrl);
+    hostname = parsed.hostname;
+  } catch (e) {
+    setAutoIconStatus('URL 格式不正确', true);
+    return;
+  }
+
+  if (!hostname || hostname === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+    setAutoIconStatus('内网地址或 localhost 无法自动获取图标，请手动上传或填写图标 URL', true);
+    return;
+  }
+
+  setAutoIconStatus('正在获取图标...', false);
+
+  // 使用 Google favicon 服务
+  const faviconUrl = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(hostname) + '&sz=128';
+
+  // 预加载图片验证
+  const img = new Image();
+  img.onload = function() {
+    document.getElementById('link-icon-url').value = faviconUrl;
+    showIconPreview(faviconUrl);
+    setAutoIconStatus('已获取 ' + hostname + ' 的图标', false);
+    toast('图标获取成功', 'success');
+  };
+  img.onerror = function() {
+    // 尝试 DuckDuckGo 作为备选
+    const ddgUrl = 'https://icons.duckduckgo.com/ip3/' + hostname + '.ico';
+    const img2 = new Image();
+    img2.onload = function() {
+      document.getElementById('link-icon-url').value = ddgUrl;
+      showIconPreview(ddgUrl);
+      setAutoIconStatus('已获取 ' + hostname + ' 的图标（DuckDuckGo）', false);
+      toast('图标获取成功', 'success');
+    };
+    img2.onerror = function() {
+      setAutoIconStatus('无法自动获取图标，请手动上传或填写图标 URL', true);
+    };
+    img2.src = ddgUrl;
+  };
+  img.src = faviconUrl;
+}
+
+function setAutoIconStatus(msg, isError) {
+  const el = document.getElementById('auto-icon-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.color = isError ? 'var(--danger)' : 'var(--text-muted)';
 }
 
 function populateCategorySelect(selected) {
