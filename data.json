@@ -7,12 +7,12 @@
     "password": "admin123"
   },
   "categories": [
-    { "id": "c1", "name": "常用", "icon": "★", "sort": 0 },
-    { "id": "c2", "name": "媒体娱乐", "icon": "MV", "sort": 1 },
-    { "id": "c3", "name": "存储同步", "icon": "DB", "sort": 2 },
-    { "id": "c4", "name": "下载工具", "icon": "DL", "sort": 3 },
-    { "id": "c5", "name": "系统管理", "icon": "AD", "sort": 4 },
-    { "id": "c6", "name": "网络服务", "icon": "NET", "sort": 5 }
+    { "id": "c1", "name": "常用", "sort": 0 },
+    { "id": "c2", "name": "媒体娱乐", "sort": 1 },
+    { "id": "c3", "name": "存储同步", "sort": 2 },
+    { "id": "c4", "name": "下载工具", "sort": 3 },
+    { "id": "c5", "name": "系统管理", "sort": 4 },
+    { "id": "c6", "name": "网络服务", "sort": 5 }
   ],
   "links": [
     { "id": "l1", "name": "Jellyfin", "url": "http://nas.local:8096", "icon": "JF", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellyfin.png", "color": "#9333EA", "desc": "开源媒体服务器", "categoryId": "c2", "sort": 0 },
