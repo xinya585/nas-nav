@@ -1422,6 +1422,7 @@ function doLogin() {
     document.getElementById('login-password').value = '';
     document.getElementById('login-error').textContent = '';
     location.hash = '#/admin';
+    router();
   } else {
     document.getElementById('login-error').textContent = '密码错误，请重试';
   }
