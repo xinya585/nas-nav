@@ -1467,31 +1467,43 @@ function setSyncState(state) {
 }
 
 async function initData() {
+  // 第一步：立即从本地缓存加载，避免刷新时显示默认数据
+  const localData = loadLocalData();
+  data = localData;
+  renderAll();
+
+  // 第二步：后台从 GitHub 拉取最新数据
   setSyncState('syncing');
   const result = await fetchDataFromGithub();
   if (result.ok && result.data) {
+    // 检查数据是否有更新
+    const localHash = JSON.stringify(localData).length;
+    const remoteHash = JSON.stringify(result.data).length;
     data = result.data;
     fileSha = result.sha;
     saveLocalData();
     setSyncState('synced');
+    // 只有数据不同时才重新渲染，避免不必要的闪烁
+    if (localHash !== remoteHash) {
+      renderAll();
+    }
   } else if (result.ok && !result.data) {
     // 文件不存在，用默认数据
     data = JSON.parse(JSON.stringify(DEFAULT_DATA));
     fileSha = null;
     saveLocalData();
     setSyncState('synced');
+    renderAll();
     // 尝试推送默认数据
     pushDataToGithub(data).catch(() => {});
   } else {
-    // 加载失败，回退本地
-    data = loadLocalData();
+    // 加载失败，继续使用本地缓存
     if (isGhConfigured()) {
       setSyncState('error');
     } else {
       setSyncState('local');
     }
   }
-  renderAll();
 }
 
 async function refreshFromGithub() {
