@@ -1889,7 +1889,7 @@ async function handleIconUpload(input) {
     const path = 'icons/' + timestamp + '_' + safeName + '.png';
 
     const resp = await fetch(
-      'https://api.github.com/repos/' + cfg.username + '/' + cfg.repo + '/contents/' + path,
+      'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/' + path,
       {
         method: 'PUT',
         headers: {
@@ -1910,7 +1910,7 @@ async function handleIconUpload(input) {
       throw new Error(err.message || '上传失败 (' + resp.status + ')');
     }
 
-    const rawUrl = 'https://raw.githubusercontent.com/' + cfg.username + '/' + cfg.repo + '/' + (cfg.branch || 'main') + '/' + path;
+    const rawUrl = 'https://raw.githubusercontent.com/' + cfg.owner + '/' + cfg.repo + '/' + (cfg.branch || 'main') + '/' + path;
     document.getElementById('link-icon-url').value = rawUrl;
     showIconPreview(rawUrl);
     setIconUploadStatus('上传成功', false);
