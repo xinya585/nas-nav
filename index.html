@@ -494,6 +494,9 @@ body {
 .data-table tr:last-child td { border-bottom: none; }
 .data-table tr:hover td { background: var(--bg-card-hover); }
 .table-actions { display: flex; gap: 6px; }
+.drag-row { transition: opacity .2s, background .2s; }
+.drag-row.dragging { opacity: 0.4; }
+.drag-row.drag-over td { border-top: 2px solid var(--accent) !important; }
 .icon-btn {
   width: 32px; height: 32px;
   display: flex;
@@ -851,7 +854,7 @@ body {
         </div>
         <table class="data-table" id="links-table">
           <thead>
-            <tr><th>图标</th><th>名称</th><th>URL</th><th>分类</th><th>描述</th><th>操作</th></tr>
+            <tr><th style="width:36px;"></th><th>图标</th><th>名称</th><th>URL</th><th>分类</th><th>描述</th><th>操作</th></tr>
           </thead>
           <tbody id="links-tbody"></tbody>
         </table>
@@ -870,7 +873,7 @@ body {
         </div>
         <table class="data-table">
           <thead>
-            <tr><th>名称</th><th>排序</th><th>服务数</th><th>操作</th></tr>
+            <tr><th style="width:36px;"></th><th>名称</th><th>服务数</th><th>操作</th></tr>
           </thead>
           <tbody id="categories-tbody"></tbody>
         </table>
@@ -1773,6 +1776,54 @@ function toggleSidebar() {
   document.getElementById('sidebar-overlay').classList.toggle('active');
 }
 
+// ===== 拖拽排序 =====
+let dragState = { type: null, id: null };
+
+function handleDragStart(e, type, id) {
+  dragState = { type, id };
+  e.target.closest('tr').classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', id);
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const row = e.target.closest('tr');
+  if (row && !row.classList.contains('dragging')) {
+    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    row.classList.add('drag-over');
+  }
+}
+
+async function handleDrop(e, type, targetId) {
+  e.preventDefault();
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+  if (!dragState.id || dragState.id === targetId) return;
+
+  const list = type === 'link' ? data.links : data.categories;
+  const fromIdx = list.findIndex(item => item.id === dragState.id);
+  const toIdx = list.findIndex(item => item.id === targetId);
+  if (fromIdx === -1 || toIdx === -1) return;
+
+  // 移动元素
+  const [moved] = list.splice(fromIdx, 1);
+  list.splice(toIdx, 0, moved);
+
+  // 重新分配 sort 值
+  list.forEach((item, idx) => item.sort = idx);
+
+  renderAll();
+  await syncToGithub();
+  toast('排序已保存', 'success');
+}
+
+function handleDragEnd(e) {
+  document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+  dragState = { type: null, id: null };
+}
+
 function renderLinksTable() {
   if (!data) return;
   const tbody = document.getElementById('links-tbody');
@@ -1784,7 +1835,8 @@ function renderLinksTable() {
     const cellIcon = link.iconUrl
       ? '<img src="' + escapeAttr(link.iconUrl) + '" style="width:32px;height:32px;border-radius:6px;object-fit:cover;">'
       : '<div class="card-icon" style="width:32px;height:32px;font-size:13px;background:#ffffff;color:var(--accent);border:1px solid var(--border);">' + escapeHtml(iconText) + '</div>';
-    html += '<tr>';
+    html += '<tr draggable="true" data-link-id="' + link.id + '" class="drag-row" ondragstart="handleDragStart(event, \'link\', \'' + link.id + '\')" ondragover="handleDragOver(event)" ondrop="handleDrop(event, \'link\', \'' + link.id + '\')" ondragend="handleDragEnd(event)">';
+    html += '<td style="cursor:grab;color:var(--text-muted);" title="拖拽排序"><svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></td>';
     html += '<td>' + cellIcon + '</td>';
     html += '<td>' + escapeHtml(link.name) + '</td>';
     html += '<td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(link.url) + '</td>';
@@ -1796,7 +1848,7 @@ function renderLinksTable() {
     html += '</div></td></tr>';
   });
   if (!html) {
-    html = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">暂无服务，点击上方按钮添加</td></tr>';
+    html = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">暂无服务，点击上方按钮添加</td></tr>';
   }
   tbody.innerHTML = html;
 }
@@ -1807,9 +1859,9 @@ function renderCategoriesTable() {
   let html = '';
   [...data.categories].sort((a,b) => a.sort - b.sort).forEach(cat => {
     const count = data.links.filter(l => l.categoryId === cat.id).length;
-    html += '<tr>';
+    html += '<tr draggable="true" data-cat-id="' + cat.id + '" class="drag-row" ondragstart="handleDragStart(event, \'category\', \'' + cat.id + '\')" ondragover="handleDragOver(event)" ondrop="handleDrop(event, \'category\', \'' + cat.id + '\')" ondragend="handleDragEnd(event)">';
+    html += '<td style="cursor:grab;color:var(--text-muted);" title="拖拽排序"><svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></td>';
     html += '<td>' + escapeHtml(cat.name) + '</td>';
-    html += '<td>' + cat.sort + '</td>';
     html += '<td>' + count + '</td>';
     html += '<td><div class="table-actions">';
     html += '<button class="icon-btn" onclick="editCategory(\'' + cat.id + '\')" title="编辑"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
