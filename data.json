@@ -62,17 +62,6 @@
       "sort": 0
     },
     {
-      "id": "l6",
-      "name": "AdGuard Home",
-      "url": "http://nas.local:3000",
-      "icon": "",
-      "iconUrl": "https://raw.githubusercontent.com/xinya585/nas-nav/main/icons/1788447614653_adguard_home_png.png",
-      "color": "#ffffff",
-      "desc": "网络广告过滤",
-      "categoryId": "c6",
-      "sort": 0
-    },
-    {
       "id": "l5",
       "name": "Home Assistant",
       "url": "http://nas.local:8123",
