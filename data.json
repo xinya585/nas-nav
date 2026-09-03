@@ -15,15 +15,15 @@
     { "id": "c6", "name": "网络服务", "sort": 5 }
   ],
   "links": [
-    { "id": "l1", "name": "Jellyfin", "url": "http://nas.local:8096", "icon": "JF", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellyfin.png", "color": "#9333EA", "desc": "开源媒体服务器", "categoryId": "c2", "sort": 0 },
-    { "id": "l2", "name": "Nextcloud", "url": "http://nas.local:8080", "icon": "NC", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nextcloud.png", "color": "#0284C7", "desc": "私有云盘与协作", "categoryId": "c3", "sort": 0 },
-    { "id": "l3", "name": "Portainer", "url": "http://nas.local:9000", "icon": "PT", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/portainer.png", "color": "#0891B2", "desc": "Docker 容器管理", "categoryId": "c5", "sort": 0 },
-    { "id": "l4", "name": "qBittorrent", "url": "http://nas.local:8081", "icon": "QB", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/qbittorrent.png", "color": "#1D4ED8", "desc": "BT 下载客户端", "categoryId": "c4", "sort": 0 },
-    { "id": "l5", "name": "Home Assistant", "url": "http://nas.local:8123", "icon": "HA", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/home-assistant.png", "color": "#0284C7", "desc": "智能家居中枢", "categoryId": "c5", "sort": 1 },
-    { "id": "l6", "name": "AdGuard Home", "url": "http://nas.local:3000", "icon": "AG", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/adguard-home.png", "color": "#16A34A", "desc": "网络广告过滤", "categoryId": "c6", "sort": 0 },
-    { "id": "l7", "name": "Alist", "url": "http://nas.local:5244", "icon": "AL", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/alist.png", "color": "#2563EB", "desc": "多网盘聚合挂载", "categoryId": "c3", "sort": 1 },
-    { "id": "l8", "name": "Nginx Proxy Manager", "url": "http://nas.local:81", "icon": "NP", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nginx-proxy-manager.png", "color": "#DC2626", "desc": "反向代理管理", "categoryId": "c6", "sort": 1 },
-    { "id": "l9", "name": "Cockpit", "url": "http://nas.local:9090", "icon": "CK", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/cockpit.png", "color": "#4B5563", "desc": "服务器 Web 管理", "categoryId": "c5", "sort": 2 },
-    { "id": "l10", "name": "Prowlarr", "url": "http://nas.local:9696", "icon": "PW", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/prowlarr.png", "color": "#D97706", "desc": "索引器管理", "categoryId": "c4", "sort": 1 }
+    { "id": "l1", "name": "Jellyfin", "url": "http://nas.local:8096", "icon": "JF", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellyfin.png", "color": "#FFFFFF", "desc": "开源媒体服务器", "categoryId": "c2", "sort": 0 },
+    { "id": "l2", "name": "Nextcloud", "url": "http://nas.local:8080", "icon": "NC", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nextcloud.png", "color": "#FFFFFF", "desc": "私有云盘与协作", "categoryId": "c3", "sort": 0 },
+    { "id": "l3", "name": "Portainer", "url": "http://nas.local:9000", "icon": "PT", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/portainer.png", "color": "#FFFFFF", "desc": "Docker 容器管理", "categoryId": "c5", "sort": 0 },
+    { "id": "l4", "name": "qBittorrent", "url": "http://nas.local:8081", "icon": "QB", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/qbittorrent.png", "color": "#FFFFFF", "desc": "BT 下载客户端", "categoryId": "c4", "sort": 0 },
+    { "id": "l5", "name": "Home Assistant", "url": "http://nas.local:8123", "icon": "HA", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/home-assistant.png", "color": "#FFFFFF", "desc": "智能家居中枢", "categoryId": "c5", "sort": 1 },
+    { "id": "l6", "name": "AdGuard Home", "url": "http://nas.local:3000", "icon": "AG", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/adguard-home.png", "color": "#FFFFFF", "desc": "网络广告过滤", "categoryId": "c6", "sort": 0 },
+    { "id": "l7", "name": "Alist", "url": "http://nas.local:5244", "icon": "AL", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/alist.png", "color": "#FFFFFF", "desc": "多网盘聚合挂载", "categoryId": "c3", "sort": 1 },
+    { "id": "l8", "name": "Nginx Proxy Manager", "url": "http://nas.local:81", "icon": "NP", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nginx-proxy-manager.png", "color": "#FFFFFF", "desc": "反向代理管理", "categoryId": "c6", "sort": 1 },
+    { "id": "l9", "name": "Cockpit", "url": "http://nas.local:9090", "icon": "CK", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/cockpit.png", "color": "#FFFFFF", "desc": "服务器 Web 管理", "categoryId": "c5", "sort": 2 },
+    { "id": "l10", "name": "Prowlarr", "url": "http://nas.local:9696", "icon": "PW", "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/prowlarr.png", "color": "#FFFFFF", "desc": "索引器管理", "categoryId": "c4", "sort": 1 }
   ]
 }
