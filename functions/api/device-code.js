@@ -2,7 +2,6 @@
 export async function onRequest(context) {
   const { request } = context;
 
-  // Handle CORS preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -34,17 +33,21 @@ export async function onRequest(context) {
     });
 
     const data = await resp.text();
-    return new Response(data, {
-      status: resp.status,
+    // 调试：返回 GitHub 的状态码和响应
+    return new Response(JSON.stringify({
+      debug: true,
+      github_status: resp.status,
+      github_body: data,
+      request_body: body
+    }), {
+      status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
+        'Access-Control-Allow-Origin': '*'
       }
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: 'proxy_error', detail: err.message, stack: err.stack }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
     });
