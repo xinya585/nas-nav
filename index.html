@@ -329,6 +329,26 @@ body {
   flex-shrink: 0;
   background: var(--card-accent, var(--accent));
 }
+.card-icon-wrap {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+}
+.card-icon-wrap .card-icon {
+  width: 100%;
+  height: 100%;
+}
+.card-icon-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  z-index: 1;
+}
 .card-info { flex: 1; min-width: 0; }
 .card-name {
   font-size: 14px;
@@ -977,6 +997,10 @@ body {
         </div>
       </div>
       <div class="form-group">
+        <label class="label">图标 URL（可选，优先显示图片）</label>
+        <input type="text" class="input" id="link-icon-url" placeholder="如：https://example.com/icon.png">
+      </div>
+      <div class="form-group">
         <label class="label">URL 地址 *</label>
         <input type="text" class="input" id="link-url" placeholder="如：http://192.168.1.10:8096">
       </div>
@@ -1054,16 +1078,16 @@ const DEFAULT_DATA = {
     { id: 'c6', name: '网络服务', icon: 'NET', sort: 5 }
   ],
   links: [
-    { id: 'l1', name: 'Jellyfin', url: 'http://nas.local:8096', icon: 'JF', color: '#9333EA', desc: '开源媒体服务器', categoryId: 'c2', sort: 0 },
-    { id: 'l2', name: 'Nextcloud', url: 'http://nas.local:8080', icon: 'NC', color: '#0284C7', desc: '私有云盘与协作', categoryId: 'c3', sort: 0 },
-    { id: 'l3', name: 'Portainer', url: 'http://nas.local:9000', icon: 'PT', color: '#0891B2', desc: 'Docker 容器管理', categoryId: 'c5', sort: 0 },
-    { id: 'l4', name: 'qBittorrent', url: 'http://nas.local:8081', icon: 'QB', color: '#1D4ED8', desc: 'BT 下载客户端', categoryId: 'c4', sort: 0 },
-    { id: 'l5', name: 'Home Assistant', url: 'http://nas.local:8123', icon: 'HA', color: '#0284C7', desc: '智能家居中枢', categoryId: 'c5', sort: 1 },
-    { id: 'l6', name: 'AdGuard Home', url: 'http://nas.local:3000', icon: 'AG', color: '#16A34A', desc: '网络广告过滤', categoryId: 'c6', sort: 0 },
-    { id: 'l7', name: 'Alist', url: 'http://nas.local:5244', icon: 'AL', color: '#2563EB', desc: '多网盘聚合挂载', categoryId: 'c3', sort: 1 },
-    { id: 'l8', name: 'Nginx Proxy Manager', url: 'http://nas.local:81', icon: 'NP', color: '#DC2626', desc: '反向代理管理', categoryId: 'c6', sort: 1 },
-    { id: 'l9', name: 'Cockpit', url: 'http://nas.local:9090', icon: 'CK', color: '#4B5563', desc: '服务器 Web 管理', categoryId: 'c5', sort: 2 },
-    { id: 'l10', name: 'Prowlarr', url: 'http://nas.local:9696', icon: 'PW', color: '#D97706', desc: '索引器管理', categoryId: 'c4', sort: 1 }
+    { id: 'l1', name: 'Jellyfin', url: 'http://nas.local:8096', icon: 'JF', iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellyfin.png', color: '#9333EA', desc: '开源媒体服务器', categoryId: 'c2', sort: 0 },
+    { id: 'l2', name: 'Nextcloud', url: 'http://nas.local:8080', icon: 'NC', iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nextcloud.png', color: '#0284C7', desc: '私有云盘与协作', categoryId: 'c3', sort: 0 },
+    { id: 'l3', name: 'Portainer', url: 'http://nas.local:9000', icon: 'PT', iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/portainer.png', color: '#0891B2', desc: 'Docker 容器管理', categoryId: 'c5', sort: 0 },
+    { id: 'l4', name: 'qBittorrent', url: 'http://nas.local:8081', icon: 'QB', iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/qbittorrent.png', color: '#1D4ED8', desc: 'BT 下载客户端', categoryId: 'c4', sort: 0 },
+    { id: 'l5', name: 'Home Assistant', url: 'http://nas.local:8123', icon: 'HA', iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/home-assistant.png', color: '#0284C7', desc: '智能家居中枢', categoryId: 'c5', sort: 1 },
+    { id: 'l6', name: 'AdGuard Home', url: 'http://nas.local:3000', icon: 'AG', iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/adguard-home.png', color: '#16A34A', desc: '网络广告过滤', categoryId: 'c6', sort: 0 },
+    { id: 'l7', name: 'Alist', url: 'http://nas.local:5244', icon: 'AL', iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/alist.png', color: '#2563EB', desc: '多网盘聚合挂载', categoryId: 'c3', sort: 1 },
+    { id: 'l8', name: 'Nginx Proxy Manager', url: 'http://nas.local:81', icon: 'NP', iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nginx-proxy-manager.png', color: '#DC2626', desc: '反向代理管理', categoryId: 'c6', sort: 1 },
+    { id: 'l9', name: 'Cockpit', url: 'http://nas.local:9090', icon: 'CK', iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/cockpit.png', color: '#4B5563', desc: '服务器 Web 管理', categoryId: 'c5', sort: 2 },
+    { id: 'l10', name: 'Prowlarr', url: 'http://nas.local:9696', icon: 'PW', iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/prowlarr.png', color: '#D97706', desc: '索引器管理', categoryId: 'c4', sort: 1 }
   ]
 };
 
@@ -1381,8 +1405,11 @@ function renderGrid() {
     html += '<div class="card-grid">';
     links.forEach(link => {
       const iconText = link.icon || link.name.charAt(0).toUpperCase();
+      const iconHtml = link.iconUrl
+        ? '<img src="' + escapeAttr(link.iconUrl) + '" alt="' + escapeAttr(link.name) + '" class="card-icon-img" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+        : '';
       html += '<a href="' + escapeAttr(link.url) + '" target="_blank" rel="noopener noreferrer" class="link-card" style="--card-accent:' + (link.color || '#059669') + '">';
-      html += '<div class="card-icon">' + escapeHtml(iconText) + '</div>';
+      html += '<div class="card-icon-wrap">' + iconHtml + '<div class="card-icon">' + escapeHtml(iconText) + '</div></div>';
       html += '<div class="card-info">';
       html += '<div class="card-name">' + escapeHtml(link.name) + '</div>';
       html += '<div class="card-desc">' + escapeHtml(link.desc || link.url) + '</div>';
@@ -1475,8 +1502,11 @@ function renderLinksTable() {
   let html = '';
   data.links.sort((a,b) => a.sort - b.sort).forEach(link => {
     const iconText = link.icon || link.name.charAt(0).toUpperCase();
+    const cellIcon = link.iconUrl
+      ? '<img src="' + escapeAttr(link.iconUrl) + '" style="width:32px;height:32px;border-radius:6px;object-fit:cover;">'
+      : '<div class="card-icon" style="width:32px;height:32px;font-size:13px;background:' + (link.color || '#059669') + '">' + escapeHtml(iconText) + '</div>';
     html += '<tr>';
-    html += '<td><div class="card-icon" style="width:32px;height:32px;font-size:13px;background:' + (link.color || '#059669') + '">' + escapeHtml(iconText) + '</div></td>';
+    html += '<td>' + cellIcon + '</td>';
     html += '<td>' + escapeHtml(link.name) + '</td>';
     html += '<td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(link.url) + '</td>';
     html += '<td>' + escapeHtml(catMap[link.categoryId] || '未分类') + '</td>';
@@ -1520,6 +1550,7 @@ function openLinkModal() {
   document.getElementById('link-id').value = '';
   document.getElementById('link-name').value = '';
   document.getElementById('link-icon').value = '';
+  document.getElementById('link-icon-url').value = '';
   document.getElementById('link-color').value = '#059669';
   document.getElementById('link-url').value = '';
   document.getElementById('link-desc').value = '';
@@ -1534,6 +1565,7 @@ function editLink(id) {
   document.getElementById('link-id').value = link.id;
   document.getElementById('link-name').value = link.name;
   document.getElementById('link-icon').value = link.icon || '';
+  document.getElementById('link-icon-url').value = link.iconUrl || '';
   document.getElementById('link-color').value = link.color || '#059669';
   document.getElementById('link-url').value = link.url;
   document.getElementById('link-desc').value = link.desc || '';
@@ -1562,6 +1594,7 @@ async function saveLink() {
     name: name,
     url: url,
     icon: document.getElementById('link-icon').value.trim(),
+    iconUrl: document.getElementById('link-icon-url').value.trim(),
     color: document.getElementById('link-color').value,
     categoryId: categoryId,
     desc: document.getElementById('link-desc').value.trim()
