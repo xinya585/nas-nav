@@ -1931,9 +1931,10 @@ async function handleIconUpload(input) {
       throw new Error(err.message || '上传失败 (' + resp.status + ')');
     }
 
-    const rawUrl = 'https://raw.githubusercontent.com/' + cfg.owner + '/' + cfg.repo + '/' + (cfg.branch || 'main') + '/' + path;
-    document.getElementById('link-icon-url').value = rawUrl;
-    showIconPreview(rawUrl);
+    // 上传成功后用 base64 data URL 保存（私有仓库 raw 链接无法公开访问）
+    const dataUrl = 'data:image/png;base64,' + base64;
+    document.getElementById('link-icon-url').value = dataUrl;
+    showIconPreview(dataUrl);
     setIconUploadStatus('上传成功', false);
     toast('图标上传成功', 'success');
   } catch (err) {
@@ -1989,33 +1990,60 @@ async function loadIconsFromRepo() {
     }
 
     statusEl.style.display = 'none';
-    let html = '';
-    files.forEach(f => {
-      if (f.type === 'file' && /\.(png|jpg|jpeg|gif|svg|webp)$/i.test(f.name)) {
-        const rawUrl = 'https://raw.githubusercontent.com/' + cfg.owner + '/' + cfg.repo + '/' + (cfg.branch || 'main') + '/icons/' + f.name;
-        html += '<div class="icon-picker-item" onclick="selectRepoIcon(\'' + rawUrl.replace(/'/g, "\\'") + '\')" title="' + escapeAttr(f.name) + '" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor=\'var(--accent)\';this.style.background=\'var(--bg-hover)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'transparent\'">'
-          + '<img src="' + escapeAttr(rawUrl) + '" alt="' + escapeAttr(f.name) + '" style="width:48px;height:48px;object-fit:contain;" loading="lazy">'
-          + '<span style="font-size:10px;color:var(--text-muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(f.name.substring(0, 12)) + '</span>'
-          + '</div>';
-      }
-    });
-
-    if (html === '') {
+    const imageFiles = files.filter(f => f.type === 'file' && /\.(png|jpg|jpeg|gif|svg|webp)$/i.test(f.name));
+    if (imageFiles.length === 0) {
       statusEl.style.display = 'block';
       statusEl.textContent = '图标库中没有图片文件';
-    } else {
-      gridEl.innerHTML = html;
+      return;
     }
+
+    // 先创建网格占位
+    let html = '';
+    imageFiles.forEach((f, idx) => {
+      html += '<div class="icon-picker-item" data-idx="' + idx + '" data-name="' + escapeAttr(f.name) + '" title="' + escapeAttr(f.name) + '" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor=\'var(--accent)\';this.style.background=\'var(--bg-hover)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'transparent\'">'
+        + '<img data-idx="' + idx + '" alt="' + escapeAttr(f.name) + '" style="width:48px;height:48px;object-fit:contain;background:var(--bg-hover);border-radius:6px;">'
+        + '<span style="font-size:10px;color:var(--text-muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(f.name.substring(0, 12)) + '</span>'
+        + '</div>';
+    });
+    gridEl.innerHTML = html;
+
+    // 异步加载每个图片的 base64 内容
+    const loadPromises = imageFiles.map((f, idx) => {
+      return fetch(
+        'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/icons/' + f.name + '?ref=' + (cfg.branch || 'main'),
+        { headers: { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json' } }
+      ).then(r => r.json()).then(fileData => {
+        if (fileData.content) {
+          const ext = f.name.split('.').pop().toLowerCase();
+          const mime = ext === 'svg' ? 'image/svg+xml' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'gif' ? 'image/gif' : ext === 'webp' ? 'image/webp' : 'image/png';
+          const dataUrl = 'data:' + mime + ';base64,' + fileData.content.replace(/\n/g, '');
+          const img = gridEl.querySelector('img[data-idx="' + idx + '"]');
+          if (img) img.src = dataUrl;
+          const item = gridEl.querySelector('.icon-picker-item[data-idx="' + idx + '"]');
+          if (item) item.dataset.dataUrl = dataUrl;
+        }
+      }).catch(() => {});
+    });
+    await Promise.all(loadPromises);
+
+    // 绑定点击事件
+    gridEl.querySelectorAll('.icon-picker-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const dataUrl = item.dataset.dataUrl;
+        const name = item.dataset.name;
+        if (dataUrl) selectRepoIcon(dataUrl, name);
+      });
+    });
   } catch (err) {
     statusEl.textContent = '加载失败：' + err.message;
   }
 }
 
-function selectRepoIcon(url) {
-  document.getElementById('link-icon-url').value = url;
-  showIconPreview(url);
+function selectRepoIcon(dataUrl, name) {
+  document.getElementById('link-icon-url').value = dataUrl;
+  showIconPreview(dataUrl);
   closeModal('icon-picker-modal');
-  toast('已选择图标', 'success');
+  toast('已选择图标：' + (name || ''), 'success');
 }
 
 function populateCategorySelect(selected) {
