@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NAS 导航</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+/* ===== CSS 变量与主题 ===== */
+:root {
+  --bg-primary: #f2f6f4;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #eef4f1;
+  --border: #dde5e0;
+  --border-hover: #b8cdc3;
+  --text-primary: #16251f;
+  --text-secondary: #4a6358;
+  --text-muted: #8aa397;
+  --accent: #059669;
+  --accent-dim: rgba(5, 150, 105, 0.1);
+  --accent-glow: rgba(5, 150, 105, 0.2);
+  --danger: #dc2626;
+  --warning: #d97706;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --font-sans: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, 'Courier New', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== 通用组件 ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+  font-weight: 500;
+}
+.btn-primary:hover { background: #04a877; border-color: #04a877; color: #fff; }
+.btn-danger { border-color: var(--danger); color: var(--danger); }
+.btn-danger:hover { background: rgba(220,38,38,0.08); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+.input, .select, .textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  transition: border-color 0.2s;
+}
+.input:focus, .select:focus, .textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+.textarea { resize: vertical; min-height: 80px; }
+.label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ===== 视图切换 ===== */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ===== 同步状态指示器 ===== */
+.sync-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+.sync-status .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+.sync-status.synced .dot { background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); }
+.sync-status.syncing .dot { background: var(--warning); animation: pulse 1s infinite; }
+.sync-status.error .dot { background: var(--danger); }
+
+/* ===== 前台：顶部状态栏 ===== */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.status-left { display: flex; align-items: center; gap: 16px; }
+.logo {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.logo-dot {
+  width: 8px; height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent-glow);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.status-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+.status-meta .sep { color: var(--border); }
+.status-right { display: flex; align-items: center; gap: 10px; }
+
+.clock {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-secondary);
+  min-width: 80px;
+  text-align: right;
+}
+
+/* ===== 前台：Hero 搜索区 ===== */
+.hero {
+  text-align: center;
+  padding: 48px 32px 32px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+.hero h1 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+.hero p {
+  color: var(--text-secondary);
+  font-size: 15px;
+  margin-bottom: 28px;
+}
+.search-box {
+  position: relative;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.search-box svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+.search-input {
+  width: 100%;
+  padding: 14px 16px 14px 44px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 15px;
+  font-family: var(--font-sans);
+  transition: all 0.2s;
+}
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-dim);
+}
+.search-input::placeholder { color: var(--text-muted); }
+
+/* ===== 前台：分类标签 ===== */
+.category-bar {
+  display: flex;
+  gap: 8px;
+  padding: 0 32px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.category-bar::-webkit-scrollbar { display: none; }
+.cat-tag {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+}
+.cat-tag:hover { border-color: var(--border-hover); color: var(--text-primary); }
+.cat-tag.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* ===== 前台：卡片网格 ===== */
+.grid-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px 60px;
+}
+.category-section { margin-bottom: 36px; }
+.category-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+  padding-left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.category-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.link-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.link-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--card-accent, var(--accent));
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.link-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--card-accent, var(--accent));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+.link-card:hover::before { opacity: 1; }
+.card-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  background: var(--card-accent, var(--accent));
+}
+.card-info { flex: 1; min-width: 0; }
+.card-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+.empty-state svg {
+  width: 48px; height: 48px;
+  margin-bottom: 16px;
+  opacity: 0.4;
+}
+.loading-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-muted);
+}
+.loading-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== 后台：布局 ===== */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+.admin-sidebar {
+  width: 240px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  padding: 20px 0;
+  flex-shrink: 0;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  overflow-y: auto;
+}
+.admin-brand {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.admin-brand .logo { font-size: 16px; }
+.admin-nav { padding: 8px 12px; }
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 2px;
+}
+.admin-nav-item:hover { background: var(--bg-card); color: var(--text-primary); }
+.admin-nav-item.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-weight: 500;
+}
+.admin-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+.admin-sidebar-footer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+.admin-main {
+  flex: 1;
+  margin-left: 240px;
+  padding: 28px 36px;
+  min-width: 0;
+}
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.admin-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+}
+.admin-header .actions { display: flex; gap: 10px; align-items: center; }
+
+/* ===== 后台：表格 ===== */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.data-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+.data-table td {
+  padding: 12px 16px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--bg-card-hover); }
+.table-actions { display: flex; gap: 6px; }
+.icon-btn {
+  width: 32px; height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+.icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+.icon-btn svg { width: 16px; height: 16px; }
+
+/* ===== 后台：表单弹窗 ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-header h3 { font-size: 16px; font-weight: 600; }
+.modal-close {
+  width: 28px; height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 4px;
+}
+.modal-close:hover { background: var(--bg-card); color: var(--text-primary); }
+.modal-body { padding: 20px; }
+.form-group { margin-bottom: 16px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* ===== 后台：登录页 ===== */
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+}
+.login-card .logo { justify-content: center; margin-bottom: 8px; font-size: 20px; }
+.login-card .login-sub {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+.login-card .btn-primary { width: 100%; justify-content: center; padding: 11px; }
+.login-error {
+  color: var(--danger);
+  font-size: 13px;
+  text-align: center;
+  margin-top: 12px;
+  min-height: 18px;
+}
+
+/* ===== GitHub 配置卡片 ===== */
+.config-card {
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  max-width: 560px;
+  margin-bottom: 20px;
+}
+.config-card h3 {
+  font-size: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.config-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.config-status.ok { background: var(--accent-dim); color: var(--accent); }
+.config-status.warn { background: rgba(217,119,6,0.1); color: var(--warning); }
+.config-help {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+.config-help code {
+  background: var(--bg-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.config-help ol { padding-left: 20px; margin: 8px 0; }
+.config-help li { margin-bottom: 4px; }
+
+/* ===== Toast ===== */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  padding: 12px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  animation: slideIn 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.toast.success { border-left: 3px solid var(--accent); }
+.toast.error { border-left: 3px solid var(--danger); }
+.toast.info { border-left: 3px solid var(--accent); }
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 768px) {
+  .status-bar { padding: 12px 16px; }
+  .status-meta { display: none; }
+  .hero { padding: 32px 16px 24px; }
+  .hero h1 { font-size: 24px; }
+  .category-bar { padding: 0 16px 16px; }
+  .grid-container { padding: 0 16px 40px; }
+  .card-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .link-card { padding: 12px; }
+  .card-icon { width: 36px; height: 36px; font-size: 15px; }
+  .admin-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s;
+    z-index: 200;
+  }
+  .admin-sidebar.open { transform: translateX(0); }
+  .admin-main { margin-left: 0; padding: 20px 16px; }
+  .admin-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .form-row { grid-template-columns: 1fr; }
+  .mobile-menu-btn { display: flex !important; }
+}
+.mobile-menu-btn {
+  display: none;
+  width: 36px; height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 150;
+}
+.sidebar-overlay.active { display: block; }
+
+/* ===== 页脚 ===== */
+.footer {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 12px;
+  border-top: 1px solid var(--border);
+}
+</style>
+</head>
+<body>
+
+<!-- ===== 视图：前台导航 ===== -->
+<div id="view-home" class="view active">
+  <header class="status-bar">
+    <div class="status-left">
+      <div class="logo"><span class="logo-dot"></span><span id="site-title">NAS 导航</span></div>
+      <div class="status-meta">
+        <span id="service-count">0 服务</span>
+        <span class="sep">|</span>
+        <span id="category-count">0 分类</span>
+        <span class="sep">|</span>
+        <span class="sync-status" id="sync-status"><span class="dot"></span><span id="sync-text">本地</span></span>
+      </div>
+    </div>
+    <div class="status-right">
+      <div class="clock" id="clock">--:--:--</div>
+      <a href="#/admin" class="btn btn-sm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        管理
+      </a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1 id="hero-title">我的家庭服务中心</h1>
+    <p id="hero-subtitle">快速访问所有自托管服务</p>
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="search-input" id="search-input" placeholder="搜索服务名称或描述..." autocomplete="off">
+    </div>
+  </section>
+
+  <div class="category-bar" id="category-bar"></div>
+
+  <main class="grid-container" id="grid-container">
+    <div class="loading-state" id="home-loading">
+      <div class="loading-spinner"></div>
+      <p>正在加载数据...</p>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span id="footer-text">NAS Navigation · 部署于 Cloudflare Pages</span>
+  </footer>
+</div>
+
+<!-- ===== 视图：后台登录 ===== -->
+<div id="view-login" class="view">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="logo"><span class="logo-dot"></span>管理后台</div>
+      <p class="login-sub">请输入管理员密码以继续</p>
+      <div class="form-group">
+        <input type="password" class="input" id="login-password" placeholder="管理员密码" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" onclick="doLogin()">登 录</button>
+      <div class="login-error" id="login-error"></div>
+      <div style="text-align:center; margin-top:16px;">
+        <a href="#/" style="color:var(--text-muted); font-size:13px; text-decoration:none;">返回导航页</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 视图：后台管理 ===== -->
+<div id="view-admin" class="view">
+  <div class="admin-layout">
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="admin-brand">
+        <div class="logo"><span class="logo-dot"></span>管理后台</div>
+      </div>
+      <nav class="admin-nav">
+        <div class="admin-nav-item active" data-tab="links" onclick="switchTab('links')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          服务链接
+        </div>
+        <div class="admin-nav-item" data-tab="categories" onclick="switchTab('categories')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          分类管理
+        </div>
+        <div class="admin-nav-item" data-tab="github" onclick="switchTab('github')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          GitHub 配置
+        </div>
+        <div class="admin-nav-item" data-tab="settings" onclick="switchTab('settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          站点设置
+        </div>
+        <div class="admin-nav-item" data-tab="data" onclick="switchTab('data')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          数据导入导出
+        </div>
+      </nav>
+      <div class="admin-sidebar-footer">
+        <button class="btn btn-sm" style="width:100%; justify-content:center;" onclick="doLogout()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          退出登录
+        </button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <button class="mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+
+      <!-- Tab: 服务链接 -->
+      <div id="tab-links" class="admin-tab">
+        <div class="admin-header">
+          <h2>服务链接</h2>
+          <div class="actions">
+            <span class="sync-status" id="admin-sync-status"><span class="dot"></span><span id="admin-sync-text">本地</span></span>
+            <button class="btn btn-sm" onclick="refreshFromGithub()" title="从 GitHub 重新拉取">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              同步
+            </button>
+            <button class="btn btn-primary" onclick="openLinkModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              添加服务
+            </button>
+          </div>
+        </div>
+        <table class="data-table" id="links-table">
+          <thead>
+            <tr><th>图标</th><th>名称</th><th>URL</th><th>分类</th><th>描述</th><th>操作</th></tr>
+          </thead>
+          <tbody id="links-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Tab: 分类管理 -->
+      <div id="tab-categories" class="admin-tab" style="display:none;">
+        <div class="admin-header">
+          <h2>分类管理</h2>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="openCategoryModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              添加分类
+            </button>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr><th>名称</th><th>图标</th><th>排序</th><th>服务数</th><th>操作</th></tr>
+          </thead>
+          <tbody id="categories-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Tab: GitHub 配置 -->
+      <div id="tab-github" class="admin-tab" style="display:none;">
+        <div class="admin-header"><h2>GitHub 配置</h2></div>
+        <div class="config-card">
+          <h3>
+            连接状态
+            <span class="config-status" id="gh-config-status">未配置</span>
+          </h3>
+          <div class="form-group">
+            <label class="label">GitHub 用户名</label>
+            <input type="text" class="input" id="gh-owner" placeholder="如：yourname">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="label">仓库名</label>
+              <input type="text" class="input" id="gh-repo" placeholder="如：nas-nav">
+            </div>
+            <div class="form-group">
+              <label class="label">分支</label>
+              <input type="text" class="input" id="gh-branch" value="main" placeholder="main">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="label">Personal Access Token</label>
+            <input type="password" class="input" id="gh-token" placeholder="ghp_xxxxxxxxxxxx">
+            <p class="hint">Token 仅保存在当前浏览器，不会上传到任何服务器</p>
+          </div>
+          <div class="form-group">
+            <label class="label">数据文件路径</label>
+            <input type="text" class="input" id="gh-path" value="data.json" placeholder="data.json">
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-primary" onclick="saveGithubConfig()">保存并测试连接</button>
+            <button class="btn" onclick="testGithubConnection()">仅测试</button>
+          </div>
+          <div class="config-help">
+            <strong>如何获取 Token：</strong>
+            <ol>
+              <li>登录 GitHub，进入 <code>Settings</code> → <code>Developer settings</code> → <code>Personal access tokens</code> → <code>Tokens (classic)</code></li>
+              <li>点击 <code>Generate new token</code> → <code>Generate new token (classic)</code></li>
+              <li>勾选 <code>repo</code> 权限（完整仓库访问），点击 Generate</li>
+              <li>复制生成的 Token（以 <code>ghp_</code> 开头）粘贴到上方</li>
+            </ol>
+            <p>配置后，所有导航数据将存储在仓库的 <code>data.json</code> 文件中，多设备同步。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: 站点设置 -->
+      <div id="tab-settings" class="admin-tab" style="display:none;">
+        <div class="admin-header"><h2>站点设置</h2></div>
+        <div style="max-width:560px;">
+          <div class="form-group">
+            <label class="label">站点标题</label>
+            <input type="text" class="input" id="setting-title">
+          </div>
+          <div class="form-group">
+            <label class="label">首页大标题</label>
+            <input type="text" class="input" id="setting-hero-title">
+          </div>
+          <div class="form-group">
+            <label class="label">首页副标题</label>
+            <input type="text" class="input" id="setting-hero-subtitle">
+          </div>
+          <div class="form-group">
+            <label class="label">页脚文字</label>
+            <input type="text" class="input" id="setting-footer">
+          </div>
+          <div class="form-group">
+            <label class="label">修改管理员密码（留空则不修改）</label>
+            <input type="password" class="input" id="setting-password" placeholder="输入新密码">
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+        </div>
+      </div>
+
+      <!-- Tab: 数据导入导出 -->
+      <div id="tab-data" class="admin-tab" style="display:none;">
+        <div class="admin-header"><h2>数据导入导出</h2></div>
+        <div style="max-width:560px; display:flex; flex-direction:column; gap:20px;">
+          <div style="padding:20px; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-card);">
+            <h3 style="font-size:15px; margin-bottom:8px;">导出数据</h3>
+            <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">将所有分类、服务链接和站点设置导出为 JSON 文件，可用于备份或迁移。</p>
+            <button class="btn" onclick="exportData()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              导出 JSON
+            </button>
+          </div>
+          <div style="padding:20px; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-card);">
+            <h3 style="font-size:15px; margin-bottom:8px;">导入数据</h3>
+            <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">从 JSON 文件导入数据，将覆盖当前所有数据。若已配置 GitHub，会同步推送到仓库。</p>
+            <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(event)">
+            <button class="btn btn-danger" onclick="document.getElementById('import-file').click()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              选择 JSON 文件导入
+            </button>
+          </div>
+          <div style="padding:20px; border:1px solid var(--danger); border-radius:var(--radius); background:rgba(220,38,38,0.04);">
+            <h3 style="font-size:15px; margin-bottom:8px; color:var(--danger);">危险操作</h3>
+            <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">清空所有数据，恢复到初始状态。若已配置 GitHub，会同步推送到仓库。</p>
+            <button class="btn btn-danger" onclick="resetAllData()">重置所有数据</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ===== 弹窗：服务链接 ===== -->
+<div class="modal-overlay" id="link-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="link-modal-title">添加服务</h3>
+      <button class="modal-close" onclick="closeModal('link-modal')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="link-id">
+      <div class="form-group">
+        <label class="label">服务名称 *</label>
+        <input type="text" class="input" id="link-name" placeholder="如：Jellyfin">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="label">图标文字（1-2字符）</label>
+          <input type="text" class="input" id="link-icon" placeholder="如：JF" maxlength="4">
+        </div>
+        <div class="form-group">
+          <label class="label">图标颜色</label>
+          <input type="color" class="input" id="link-color" value="#059669" style="padding:4px; height:38px; cursor:pointer;">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="label">URL 地址 *</label>
+        <input type="text" class="input" id="link-url" placeholder="如：http://192.168.1.10:8096">
+      </div>
+      <div class="form-group">
+        <label class="label">所属分类 *</label>
+        <select class="select" id="link-category"></select>
+      </div>
+      <div class="form-group">
+        <label class="label">描述</label>
+        <input type="text" class="input" id="link-desc" placeholder="简短描述（可选）">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('link-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveLink()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：分类 ===== -->
+<div class="modal-overlay" id="category-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="category-modal-title">添加分类</h3>
+      <button class="modal-close" onclick="closeModal('category-modal')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="category-id">
+      <div class="form-group">
+        <label class="label">分类名称 *</label>
+        <input type="text" class="input" id="category-name" placeholder="如：媒体娱乐">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="label">图标（1-2字符）</label>
+          <input type="text" class="input" id="category-icon" placeholder="如：MV" maxlength="4">
+        </div>
+        <div class="form-group">
+          <label class="label">排序</label>
+          <input type="number" class="input" id="category-sort" value="0" min="0">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('category-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveCategory()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast 容器 -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ===== 常量与默认数据 =====
+const STORAGE_KEY = 'nas_nav_data';
+const GH_CONFIG_KEY = 'nas_nav_gh_config';
+
+const DEFAULT_DATA = {
+  settings: {
+    title: 'NAS 导航',
+    heroTitle: '我的家庭服务中心',
+    heroSubtitle: '快速访问所有自托管服务',
+    footer: 'NAS Navigation · 部署于 Cloudflare Pages',
+    password: 'admin123'
+  },
+  categories: [
+    { id: 'c1', name: '常用', icon: '★', sort: 0 },
+    { id: 'c2', name: '媒体娱乐', icon: 'MV', sort: 1 },
+    { id: 'c3', name: '存储同步', icon: 'DB', sort: 2 },
+    { id: 'c4', name: '下载工具', icon: 'DL', sort: 3 },
+    { id: 'c5', name: '系统管理', icon: 'AD', sort: 4 },
+    { id: 'c6', name: '网络服务', icon: 'NET', sort: 5 }
+  ],
+  links: [
+    { id: 'l1', name: 'Jellyfin', url: 'http://nas.local:8096', icon: 'JF', color: '#9333EA', desc: '开源媒体服务器', categoryId: 'c2', sort: 0 },
+    { id: 'l2', name: 'Nextcloud', url: 'http://nas.local:8080', icon: 'NC', color: '#0284C7', desc: '私有云盘与协作', categoryId: 'c3', sort: 0 },
+    { id: 'l3', name: 'Portainer', url: 'http://nas.local:9000', icon: 'PT', color: '#0891B2', desc: 'Docker 容器管理', categoryId: 'c5', sort: 0 },
+    { id: 'l4', name: 'qBittorrent', url: 'http://nas.local:8081', icon: 'QB', color: '#1D4ED8', desc: 'BT 下载客户端', categoryId: 'c4', sort: 0 },
+    { id: 'l5', name: 'Home Assistant', url: 'http://nas.local:8123', icon: 'HA', color: '#0284C7', desc: '智能家居中枢', categoryId: 'c5', sort: 1 },
+    { id: 'l6', name: 'AdGuard Home', url: 'http://nas.local:3000', icon: 'AG', color: '#16A34A', desc: '网络广告过滤', categoryId: 'c6', sort: 0 },
+    { id: 'l7', name: 'Alist', url: 'http://nas.local:5244', icon: 'AL', color: '#2563EB', desc: '多网盘聚合挂载', categoryId: 'c3', sort: 1 },
+    { id: 'l8', name: 'Nginx Proxy Manager', url: 'http://nas.local:81', icon: 'NP', color: '#DC2626', desc: '反向代理管理', categoryId: 'c6', sort: 1 },
+    { id: 'l9', name: 'Cockpit', url: 'http://nas.local:9090', icon: 'CK', color: '#4B5563', desc: '服务器 Web 管理', categoryId: 'c5', sort: 2 },
+    { id: 'l10', name: 'Prowlarr', url: 'http://nas.local:9696', icon: 'PW', color: '#D97706', desc: '索引器管理', categoryId: 'c4', sort: 1 }
+  ]
+};
+
+// ===== 全局状态 =====
+let data = null;
+let fileSha = null; // GitHub data.json 的 sha，用于更新
+let currentCategory = 'all';
+let searchQuery = '';
+let isAdmin = false;
+let currentTab = 'links';
+let syncState = 'local'; // local | synced | syncing | error
+
+// ===== GitHub 配置 =====
+function getGhConfig() {
+  try {
+    return JSON.parse(localStorage.getItem(GH_CONFIG_KEY) || '{}');
+  } catch(e) { return {}; }
+}
+
+function saveGhConfig(cfg) {
+  localStorage.setItem(GH_CONFIG_KEY, JSON.stringify(cfg));
+}
+
+function isGhConfigured() {
+  const cfg = getGhConfig();
+  return !!(cfg.owner && cfg.repo && cfg.branch && cfg.token);
+}
+
+// ===== GitHub API =====
+async function fetchDataFromGithub() {
+  const cfg = getGhConfig();
+  if (!isGhConfigured()) return { ok: false, reason: 'not_configured' };
+
+  try {
+    const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path || 'data.json'}?ref=${cfg.branch}`, {
+      headers: {
+        'Authorization': 'token ' + cfg.token,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (res.status === 404) {
+      return { ok: true, data: null, sha: null }; // 文件不存在，用默认数据
+    }
+    if (!res.ok) {
+      return { ok: false, reason: 'http_' + res.status };
+    }
+    const json = await res.json();
+    const content = JSON.parse(decodeURIComponent(escape(atob(json.content))));
+    return { ok: true, data: content, sha: json.sha };
+  } catch(e) {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+async function pushDataToGithub(d) {
+  const cfg = getGhConfig();
+  if (!isGhConfigured()) return { ok: false, reason: 'not_configured' };
+
+  try {
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(d, null, 2))));
+    const body = {
+      message: 'update nav data at ' + new Date().toISOString(),
+      content: content,
+      branch: cfg.branch
+    };
+    if (fileSha) body.sha = fileSha;
+
+    const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path || 'data.json'}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'token ' + cfg.token,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return { ok: false, reason: 'http_' + res.status, message: err.message };
+    }
+    const json = await res.json();
+    if (json.content && json.content.sha) fileSha = json.content.sha;
+    return { ok: true };
+  } catch(e) {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+async function testGithubApi() {
+  const cfg = getGhConfig();
+  if (!isGhConfigured()) return { ok: false, reason: 'not_configured' };
+  try {
+    const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}`, {
+      headers: { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (res.ok) return { ok: true };
+    return { ok: false, reason: 'http_' + res.status };
+  } catch(e) {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+// ===== 数据加载与保存 =====
+function loadLocalData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.settings && parsed.categories && parsed.links) return parsed;
+    }
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+
+function saveLocalData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+async function syncToGithub() {
+  if (!isGhConfigured()) {
+    saveLocalData();
+    return;
+  }
+  setSyncState('syncing');
+  const result = await pushDataToGithub(data);
+  if (result.ok) {
+    saveLocalData();
+    setSyncState('synced');
+    toast('已同步到 GitHub', 'success');
+  } else {
+    saveLocalData(); // 即使 GitHub 失败也保存本地
+    setSyncState('error');
+    toast('GitHub 同步失败：' + (result.message || result.reason), 'error');
+  }
+}
+
+function setSyncState(state) {
+  syncState = state;
+  const texts = { local: '本地模式', synced: '已同步 GitHub', syncing: '同步中...', error: '同步失败' };
+  const classes = { local: '', synced: 'synced', syncing: 'syncing', error: 'error' };
+  ['sync-status', 'admin-sync-status'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.className = 'sync-status ' + classes[state];
+      const textEl = el.querySelector('span:last-child');
+      if (textEl) textEl.textContent = texts[state];
+    }
+  });
+}
+
+async function initData() {
+  if (isGhConfigured()) {
+    setSyncState('syncing');
+    const result = await fetchDataFromGithub();
+    if (result.ok) {
+      if (result.data) {
+        data = result.data;
+        fileSha = result.sha;
+      } else {
+        data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        fileSha = null;
+        // 首次使用，推送默认数据到 GitHub
+        await pushDataToGithub(data);
+      }
+      saveLocalData();
+      setSyncState('synced');
+    } else {
+      // GitHub 拉取失败，回退本地
+      data = loadLocalData();
+      setSyncState('error');
+      toast('从 GitHub 加载失败，使用本地数据', 'error');
+    }
+  } else {
+    data = loadLocalData();
+    setSyncState('local');
+  }
+  renderAll();
+}
+
+async function refreshFromGithub() {
+  if (!isGhConfigured()) {
+    toast('未配置 GitHub', 'error');
+    return;
+  }
+  setSyncState('syncing');
+  const result = await fetchDataFromGithub();
+  if (result.ok && result.data) {
+    data = result.data;
+    fileSha = result.sha;
+    saveLocalData();
+    setSyncState('synced');
+    renderAll();
+    toast('已从 GitHub 刷新', 'success');
+  } else {
+    setSyncState('error');
+    toast('刷新失败', 'error');
+  }
+}
+
+// ===== 工具函数 =====
+function uid() {
+  return 'id_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  return (str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function toast(msg, type) {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast ' + (type || 'success');
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(100%)';
+    el.style.transition = 'all 0.3s';
+    setTimeout(() => el.remove(), 300);
+  }, 3000);
+}
+
+// ===== 路由 =====
+function router() {
+  const hash = location.hash || '#/';
+  if (hash.startsWith('#/admin')) {
+    if (isAdmin) {
+      showView('admin');
+      renderAdmin();
+    } else {
+      showView('login');
+    }
+  } else {
+    showView('home');
+    renderHome();
+  }
+}
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+}
+
+window.addEventListener('hashchange', router);
+
+// ===== 渲染 =====
+function renderAll() {
+  renderHome();
+  if (isAdmin) renderAdmin();
+}
+
+function renderHome() {
+  if (!data) return;
+  document.getElementById('home-loading').style.display = 'none';
+  document.getElementById('site-title').textContent = data.settings.title;
+  document.getElementById('hero-title').textContent = data.settings.heroTitle;
+  document.getElementById('hero-subtitle').textContent = data.settings.heroSubtitle;
+  document.getElementById('footer-text').textContent = data.settings.footer;
+  document.getElementById('service-count').textContent = data.links.length + ' 服务';
+  document.getElementById('category-count').textContent = data.categories.length + ' 分类';
+  renderCategoryBar();
+  renderGrid();
+}
+
+function renderCategoryBar() {
+  const bar = document.getElementById('category-bar');
+  const sortedCats = [...data.categories].sort((a,b) => a.sort - b.sort);
+  let html = '<button class="cat-tag ' + (currentCategory === 'all' ? 'active' : '') + '" onclick="filterCategory(\'all\')">全部</button>';
+  sortedCats.forEach(cat => {
+    html += '<button class="cat-tag ' + (currentCategory === cat.id ? 'active' : '') + '" onclick="filterCategory(\'' + cat.id + '\')">' + escapeHtml(cat.name) + '</button>';
+  });
+  bar.innerHTML = html;
+}
+
+function filterCategory(id) {
+  currentCategory = id;
+  renderCategoryBar();
+  renderGrid();
+}
+
+function renderGrid() {
+  const container = document.getElementById('grid-container');
+  const q = searchQuery.toLowerCase().trim();
+  const sortedCats = [...data.categories].sort((a,b) => a.sort - b.sort);
+  let html = '';
+  let totalVisible = 0;
+
+  const catsToShow = currentCategory === 'all' ? sortedCats : sortedCats.filter(c => c.id === currentCategory);
+
+  catsToShow.forEach(cat => {
+    let links = data.links
+      .filter(l => l.categoryId === cat.id)
+      .sort((a,b) => a.sort - b.sort);
+    if (q) {
+      links = links.filter(l =>
+        l.name.toLowerCase().includes(q) ||
+        (l.desc && l.desc.toLowerCase().includes(q)) ||
+        l.url.toLowerCase().includes(q)
+      );
+    }
+    if (links.length === 0) return;
+    totalVisible += links.length;
+
+    html += '<div class="category-section">';
+    html += '<div class="category-title">' + escapeHtml(cat.name) + ' · ' + links.length + '</div>';
+    html += '<div class="card-grid">';
+    links.forEach(link => {
+      const iconText = link.icon || link.name.charAt(0).toUpperCase();
+      html += '<a href="' + escapeAttr(link.url) + '" target="_blank" rel="noopener noreferrer" class="link-card" style="--card-accent:' + (link.color || '#059669') + '">';
+      html += '<div class="card-icon">' + escapeHtml(iconText) + '</div>';
+      html += '<div class="card-info">';
+      html += '<div class="card-name">' + escapeHtml(link.name) + '</div>';
+      html += '<div class="card-desc">' + escapeHtml(link.desc || link.url) + '</div>';
+      html += '</div></a>';
+    });
+    html += '</div></div>';
+  });
+
+  if (totalVisible === 0) {
+    html = '<div class="empty-state">';
+    html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+    html += '<p>' + (q ? '没有找到匹配的服务' : '暂无服务，请在后台添加') + '</p>';
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+document.getElementById('search-input').addEventListener('input', function(e) {
+  searchQuery = e.target.value;
+  renderGrid();
+});
+
+// ===== 时钟 =====
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const s = String(now.getSeconds()).padStart(2, '0');
+  document.getElementById('clock').textContent = h + ':' + m + ':' + s;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ===== 后台：登录 =====
+function doLogin() {
+  const pwd = document.getElementById('login-password').value;
+  if (data && pwd === data.settings.password) {
+    isAdmin = true;
+    document.getElementById('login-password').value = '';
+    document.getElementById('login-error').textContent = '';
+    location.hash = '#/admin';
+  } else {
+    document.getElementById('login-error').textContent = '密码错误，请重试';
+  }
+}
+document.getElementById('login-password').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') doLogin();
+});
+
+function doLogout() {
+  isAdmin = false;
+  location.hash = '#/';
+}
+
+// ===== 后台：渲染 =====
+function renderAdmin() {
+  switchTab(currentTab, true);
+  loadSettingsForm();
+  loadGithubConfigForm();
+}
+
+function switchTab(tab, force) {
+  if (!force && currentTab === tab) return;
+  currentTab = tab;
+  document.querySelectorAll('.admin-nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.tab === tab);
+  });
+  document.querySelectorAll('.admin-tab').forEach(t => t.style.display = 'none');
+  document.getElementById('tab-' + tab).style.display = 'block';
+  if (window.innerWidth <= 768) {
+    document.getElementById('admin-sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+  }
+  if (tab === 'links') renderLinksTable();
+  if (tab === 'categories') renderCategoriesTable();
+}
+
+function toggleSidebar() {
+  document.getElementById('admin-sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('active');
+}
+
+function renderLinksTable() {
+  if (!data) return;
+  const tbody = document.getElementById('links-tbody');
+  const catMap = {};
+  data.categories.forEach(c => catMap[c.id] = c.name);
+  let html = '';
+  data.links.sort((a,b) => a.sort - b.sort).forEach(link => {
+    const iconText = link.icon || link.name.charAt(0).toUpperCase();
+    html += '<tr>';
+    html += '<td><div class="card-icon" style="width:32px;height:32px;font-size:13px;background:' + (link.color || '#059669') + '">' + escapeHtml(iconText) + '</div></td>';
+    html += '<td>' + escapeHtml(link.name) + '</td>';
+    html += '<td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(link.url) + '</td>';
+    html += '<td>' + escapeHtml(catMap[link.categoryId] || '未分类') + '</td>';
+    html += '<td style="color:var(--text-muted);font-size:13px;">' + escapeHtml(link.desc || '-') + '</td>';
+    html += '<td><div class="table-actions">';
+    html += '<button class="icon-btn" onclick="editLink(\'' + link.id + '\')" title="编辑"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
+    html += '<button class="icon-btn danger" onclick="deleteLink(\'' + link.id + '\')" title="删除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>';
+    html += '</div></td></tr>';
+  });
+  if (!html) {
+    html = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">暂无服务，点击上方按钮添加</td></tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+function renderCategoriesTable() {
+  if (!data) return;
+  const tbody = document.getElementById('categories-tbody');
+  let html = '';
+  [...data.categories].sort((a,b) => a.sort - b.sort).forEach(cat => {
+    const count = data.links.filter(l => l.categoryId === cat.id).length;
+    html += '<tr>';
+    html += '<td>' + escapeHtml(cat.name) + '</td>';
+    html += '<td>' + escapeHtml(cat.icon || '-') + '</td>';
+    html += '<td>' + cat.sort + '</td>';
+    html += '<td>' + count + '</td>';
+    html += '<td><div class="table-actions">';
+    html += '<button class="icon-btn" onclick="editCategory(\'' + cat.id + '\')" title="编辑"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
+    html += '<button class="icon-btn danger" onclick="deleteCategory(\'' + cat.id + '\')" title="删除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>';
+    html += '</div></td></tr>';
+  });
+  if (!html) {
+    html = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">暂无分类</td></tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+// ===== 后台：服务链接 CRUD =====
+function openLinkModal() {
+  document.getElementById('link-modal-title').textContent = '添加服务';
+  document.getElementById('link-id').value = '';
+  document.getElementById('link-name').value = '';
+  document.getElementById('link-icon').value = '';
+  document.getElementById('link-color').value = '#059669';
+  document.getElementById('link-url').value = '';
+  document.getElementById('link-desc').value = '';
+  populateCategorySelect();
+  document.getElementById('link-modal').classList.add('active');
+}
+
+function editLink(id) {
+  const link = data.links.find(l => l.id === id);
+  if (!link) return;
+  document.getElementById('link-modal-title').textContent = '编辑服务';
+  document.getElementById('link-id').value = link.id;
+  document.getElementById('link-name').value = link.name;
+  document.getElementById('link-icon').value = link.icon || '';
+  document.getElementById('link-color').value = link.color || '#059669';
+  document.getElementById('link-url').value = link.url;
+  document.getElementById('link-desc').value = link.desc || '';
+  populateCategorySelect(link.categoryId);
+  document.getElementById('link-modal').classList.add('active');
+}
+
+function populateCategorySelect(selected) {
+  const sel = document.getElementById('link-category');
+  let html = '';
+  [...data.categories].sort((a,b) => a.sort - b.sort).forEach(cat => {
+    html += '<option value="' + cat.id + '"' + (cat.id === selected ? ' selected' : '') + '>' + escapeHtml(cat.name) + '</option>';
+  });
+  sel.innerHTML = html;
+}
+
+async function saveLink() {
+  const id = document.getElementById('link-id').value;
+  const name = document.getElementById('link-name').value.trim();
+  const url = document.getElementById('link-url').value.trim();
+  const categoryId = document.getElementById('link-category').value;
+  if (!name || !url) { toast('请填写名称和 URL', 'error'); return; }
+  if (!categoryId) { toast('请先创建分类', 'error'); return; }
+
+  const linkData = {
+    name: name,
+    url: url,
+    icon: document.getElementById('link-icon').value.trim(),
+    color: document.getElementById('link-color').value,
+    categoryId: categoryId,
+    desc: document.getElementById('link-desc').value.trim()
+  };
+
+  if (id) {
+    const idx = data.links.findIndex(l => l.id === id);
+    if (idx > -1) data.links[idx] = Object.assign({}, data.links[idx], linkData);
+    toast('服务已更新', 'success');
+  } else {
+    data.links.push(Object.assign({ id: uid(), sort: data.links.length }, linkData));
+    toast('服务已添加', 'success');
+  }
+  closeModal('link-modal');
+  renderAll();
+  await syncToGithub();
+}
+
+async function deleteLink(id) {
+  if (!confirm('确定要删除这个服务吗？')) return;
+  data.links = data.links.filter(l => l.id !== id);
+  renderAll();
+  await syncToGithub();
+  toast('服务已删除', 'success');
+}
+
+// ===== 后台：分类 CRUD =====
+function openCategoryModal() {
+  document.getElementById('category-modal-title').textContent = '添加分类';
+  document.getElementById('category-id').value = '';
+  document.getElementById('category-name').value = '';
+  document.getElementById('category-icon').value = '';
+  document.getElementById('category-sort').value = data.categories.length;
+  document.getElementById('category-modal').classList.add('active');
+}
+
+function editCategory(id) {
+  const cat = data.categories.find(c => c.id === id);
+  if (!cat) return;
+  document.getElementById('category-modal-title').textContent = '编辑分类';
+  document.getElementById('category-id').value = cat.id;
+  document.getElementById('category-name').value = cat.name;
+  document.getElementById('category-icon').value = cat.icon || '';
+  document.getElementById('category-sort').value = cat.sort;
+  document.getElementById('category-modal').classList.add('active');
+}
+
+async function saveCategory() {
+  const id = document.getElementById('category-id').value;
+  const name = document.getElementById('category-name').value.trim();
+  if (!name) { toast('请填写分类名称', 'error'); return; }
+
+  const catData = {
+    name: name,
+    icon: document.getElementById('category-icon').value.trim(),
+    sort: parseInt(document.getElementById('category-sort').value) || 0
+  };
+
+  if (id) {
+    const idx = data.categories.findIndex(c => c.id === id);
+    if (idx > -1) data.categories[idx] = Object.assign({}, data.categories[idx], catData);
+    toast('分类已更新', 'success');
+  } else {
+    data.categories.push(Object.assign({ id: uid() }, catData));
+    toast('分类已添加', 'success');
+  }
+  closeModal('category-modal');
+  renderAll();
+  await syncToGithub();
+}
+
+async function deleteCategory(id) {
+  const count = data.links.filter(l => l.categoryId === id).length;
+  const msg = count > 0
+    ? '该分类下有 ' + count + ' 个服务，删除后这些服务将变为未分类。确定删除？'
+    : '确定要删除这个分类吗？';
+  if (!confirm(msg)) return;
+  data.categories = data.categories.filter(c => c.id !== id);
+  renderAll();
+  await syncToGithub();
+  toast('分类已删除', 'success');
+}
+
+// ===== 后台：GitHub 配置 =====
+function loadGithubConfigForm() {
+  const cfg = getGhConfig();
+  document.getElementById('gh-owner').value = cfg.owner || '';
+  document.getElementById('gh-repo').value = cfg.repo || '';
+  document.getElementById('gh-branch').value = cfg.branch || 'main';
+  document.getElementById('gh-token').value = cfg.token || '';
+  document.getElementById('gh-path').value = cfg.path || 'data.json';
+  updateGhConfigStatus();
+}
+
+function updateGhConfigStatus() {
+  const el = document.getElementById('gh-config-status');
+  if (isGhConfigured()) {
+    el.textContent = '已配置';
+    el.className = 'config-status ok';
+  } else {
+    el.textContent = '未配置';
+    el.className = 'config-status warn';
+  }
+}
+
+async function saveGithubConfig() {
+  const cfg = {
+    owner: document.getElementById('gh-owner').value.trim(),
+    repo: document.getElementById('gh-repo').value.trim(),
+    branch: document.getElementById('gh-branch').value.trim() || 'main',
+    token: document.getElementById('gh-token').value.trim(),
+    path: document.getElementById('gh-path').value.trim() || 'data.json'
+  };
+  if (!cfg.owner || !cfg.repo || !cfg.token) {
+    toast('请填写用户名、仓库名和 Token', 'error');
+    return;
+  }
+  saveGhConfig(cfg);
+  updateGhConfigStatus();
+
+  // 测试连接
+  toast('正在测试连接...', 'info');
+  const test = await testGithubApi();
+  if (test.ok) {
+    toast('连接成功，正在拉取数据...', 'success');
+    fileSha = null;
+    await initData();
+    toast('GitHub 配置完成', 'success');
+  } else {
+    toast('连接失败：' + test.reason + '，请检查配置', 'error');
+  }
+}
+
+async function testGithubConnection() {
+  const cfg = {
+    owner: document.getElementById('gh-owner').value.trim(),
+    repo: document.getElementById('gh-repo').value.trim(),
+    branch: document.getElementById('gh-branch').value.trim() || 'main',
+    token: document.getElementById('gh-token').value.trim(),
+    path: document.getElementById('gh-path').value.trim() || 'data.json'
+  };
+  if (!cfg.owner || !cfg.repo || !cfg.token) {
+    toast('请先填写配置', 'error');
+    return;
+  }
+  saveGhConfig(cfg);
+  toast('正在测试...', 'info');
+  const result = await testGithubApi();
+  if (result.ok) {
+    toast('连接成功', 'success');
+  } else {
+    toast('连接失败：' + result.reason, 'error');
+  }
+}
+
+// ===== 后台：设置 =====
+function loadSettingsForm() {
+  if (!data) return;
+  document.getElementById('setting-title').value = data.settings.title;
+  document.getElementById('setting-hero-title').value = data.settings.heroTitle;
+  document.getElementById('setting-hero-subtitle').value = data.settings.heroSubtitle;
+  document.getElementById('setting-footer').value = data.settings.footer;
+  document.getElementById('setting-password').value = '';
+}
+
+async function saveSettings() {
+  data.settings.title = document.getElementById('setting-title').value.trim() || 'NAS 导航';
+  data.settings.heroTitle = document.getElementById('setting-hero-title').value.trim() || '我的家庭服务中心';
+  data.settings.heroSubtitle = document.getElementById('setting-hero-subtitle').value.trim() || '';
+  data.settings.footer = document.getElementById('setting-footer').value.trim() || '';
+  const newPwd = document.getElementById('setting-password').value;
+  if (newPwd) data.settings.password = newPwd;
+  renderAll();
+  await syncToGithub();
+  toast('设置已保存', 'success');
+}
+
+// ===== 数据导入导出 =====
+function exportData() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'nas-nav-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('数据已导出', 'success');
+}
+
+async function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!imported.settings || !imported.categories || !imported.links) {
+        toast('文件格式不正确', 'error');
+        return;
+      }
+      if (!confirm('导入将覆盖当前所有数据，确定继续？')) return;
+      data = imported;
+      fileSha = null;
+      renderAll();
+      syncToGithub();
+      toast('数据已导入', 'success');
+    } catch(err) {
+      toast('文件解析失败', 'error');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+async function resetAllData() {
+  if (!confirm('确定要重置所有数据吗？此操作不可撤销！')) return;
+  if (!confirm('再次确认：所有自定义内容将被清除，恢复默认数据。')) return;
+  data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  fileSha = null;
+  renderAll();
+  await syncToGithub();
+  toast('数据已重置', 'success');
+}
+
+// ===== 弹窗 =====
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('active');
+  });
+});
+
+// ===== 初始化 =====
+initData();
+router();
+</script>
+</body>
+</html>
