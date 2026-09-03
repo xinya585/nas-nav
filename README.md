@@ -8,7 +8,13 @@
 [![GitHub](https://img.shields.io/badge/GitHub-Data%20Sync-181717?style=flat-square&logo=github)](https://github.com)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
-[在线预览](https://nav.v9.cc.cd) · [功能特性](#-功能特性) · [快速部署](#-快速部署) · [使用说明](#-使用说明)
+<br>
+
+[🚀 在线预览](https://nav.v9.cc.cd) · [✨ 功能特性](#-功能特性) · [🚀 快速部署](#-快速部署) · [📖 使用说明](#-使用说明)
+
+<br>
+
+> 🌐 **在线体验：[https://nav.v9.cc.cd](https://nav.v9.cc.cd)**
 
 </div>
 
