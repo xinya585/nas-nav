@@ -795,20 +795,25 @@ body {
 
       <!-- GitHub Device Flow 授权面板 -->
       <div id="login-device-flow-panel" style="display:none;margin-top:16px;padding:16px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);text-align:left;">
-        <div style="font-weight:600;margin-bottom:8px;font-size:14px;">GitHub 设备授权</div>
-        <div style="margin-bottom:12px;font-size:13px;line-height:1.6;">
-          1. 复制下方验证码<br>
-          2. 点击 <a href="https://github.com/login/device" target="_blank" style="color:var(--accent);font-weight:600;">打开 GitHub 授权页面</a>（新标签页）<br>
-          3. 粘贴验证码并点击授权<br>
-          4. <strong>授权成功后返回此页面，将自动登录</strong>
+        <div style="font-weight:600;margin-bottom:10px;font-size:14px;color:var(--accent);">GitHub 设备授权</div>
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;line-height:1.6;color:#92400e;">
+          <strong>重要：</strong>请在<strong>新标签页</strong>完成授权，<strong>不要关闭此页面</strong>。授权成功后切换回本页面，将自动登录。
+        </div>
+        <div style="margin-bottom:12px;font-size:13px;line-height:1.8;">
+          1. 点击下方按钮打开 GitHub 授权页面<br>
+          2. 粘贴验证码并点击授权<br>
+          3. 授权成功后<strong>切换回此页面</strong>
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
           <span style="font-size:12px;color:var(--text-muted);">验证码：</span>
           <code id="login-device-code" style="font-size:18px;font-weight:700;letter-spacing:2px;background:var(--bg);padding:4px 12px;border-radius:6px;border:1px solid var(--border);"></code>
           <button type="button" class="btn" style="font-size:11px;padding:3px 8px;" onclick="copyLoginDeviceCode()">复制</button>
         </div>
-        <div id="login-device-status" style="font-size:12px;color:var(--text-muted);">等待授权中...请勿关闭此页面</div>
-        <button type="button" class="btn" style="margin-top:10px;font-size:12px;" onclick="cancelLoginDeviceFlow()">取消</button>
+        <button type="button" class="btn" style="width:100%;margin-bottom:10px;background:#24292f;color:#fff;border-color:#24292f;" onclick="window.open('https://github.com/login/device','_blank')">
+          打开 GitHub 授权页面
+        </button>
+        <div id="login-device-status" style="font-size:12px;color:var(--text-muted);text-align:center;">等待授权中...请勿关闭此页面</div>
+        <button type="button" class="btn" style="margin-top:10px;font-size:12px;width:100%;" onclick="cancelLoginDeviceFlow()">取消</button>
       </div>
 
       <div style="text-align:center; margin-top:16px;">
@@ -1559,6 +1564,14 @@ async function startLoginWithGithub() {
     const interval = (result.interval || 5) * 1000;
     const deviceCode = result.device_code;
 
+    // 保存到 sessionStorage，页面刷新后可恢复轮询
+    sessionStorage.setItem('gh_device_flow', JSON.stringify({
+      device_code: deviceCode,
+      user_code: result.user_code,
+      interval: result.interval || 5,
+      expires_at: Date.now() + (result.expires_in || 900) * 1000
+    }));
+
     if (loginDeviceFlowTimer) clearInterval(loginDeviceFlowTimer);
     loginDeviceFlowTimer = setInterval(async () => {
       try {
@@ -1576,16 +1589,19 @@ async function startLoginWithGithub() {
         if (tokenResult.access_token) {
           clearInterval(loginDeviceFlowTimer);
           loginDeviceFlowTimer = null;
+          sessionStorage.removeItem('gh_device_flow');
           await completeGithubLogin(tokenResult.access_token);
         } else if (tokenResult.error === 'authorization_pending') {
-          document.getElementById('login-device-status').textContent = '等待授权中...';
+          document.getElementById('login-device-status').textContent = '等待授权中...切换回此页面将自动登录';
         } else if (tokenResult.error === 'expired_token') {
           clearInterval(loginDeviceFlowTimer);
           loginDeviceFlowTimer = null;
+          sessionStorage.removeItem('gh_device_flow');
           document.getElementById('login-device-status').textContent = '验证码已过期，请重试';
         } else if (tokenResult.error === 'access_denied') {
           clearInterval(loginDeviceFlowTimer);
           loginDeviceFlowTimer = null;
+          sessionStorage.removeItem('gh_device_flow');
           document.getElementById('login-device-status').textContent = '授权已取消';
         }
       } catch (e) {
@@ -1659,7 +1675,64 @@ function cancelLoginDeviceFlow() {
     clearInterval(loginDeviceFlowTimer);
     loginDeviceFlowTimer = null;
   }
+  sessionStorage.removeItem('gh_device_flow');
   document.getElementById('login-device-flow-panel').style.display = 'none';
+}
+
+// 页面加载时恢复未完成的 Device Flow 轮询
+function resumeLoginDeviceFlow() {
+  try {
+    const saved = sessionStorage.getItem('gh_device_flow');
+    if (!saved) return;
+    const flow = JSON.parse(saved);
+    if (!flow.device_code || !flow.user_code) return;
+    if (flow.expires_at && Date.now() > flow.expires_at) {
+      sessionStorage.removeItem('gh_device_flow');
+      return;
+    }
+
+    // 显示面板
+    document.getElementById('login-device-flow-panel').style.display = 'block';
+    document.getElementById('login-device-code').textContent = flow.user_code;
+    document.getElementById('login-device-status').textContent = '恢复授权中...请确认已在 GitHub 完成授权';
+
+    const interval = (flow.interval || 5) * 1000;
+    const deviceCode = flow.device_code;
+
+    if (loginDeviceFlowTimer) clearInterval(loginDeviceFlowTimer);
+    loginDeviceFlowTimer = setInterval(async () => {
+      try {
+        const tokenResp = await fetch('/api/access-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            client_id: GITHUB_CLIENT_ID,
+            device_code: deviceCode,
+            grant_type: 'urn:ietf:params:oauth:grant-type:device_code'
+          })
+        });
+        const tokenResult = await tokenResp.json();
+
+        if (tokenResult.access_token) {
+          clearInterval(loginDeviceFlowTimer);
+          loginDeviceFlowTimer = null;
+          sessionStorage.removeItem('gh_device_flow');
+          await completeGithubLogin(tokenResult.access_token);
+        } else if (tokenResult.error === 'authorization_pending') {
+          document.getElementById('login-device-status').textContent = '等待授权中...切换回此页面将自动登录';
+        } else if (tokenResult.error === 'expired_token' || tokenResult.error === 'access_denied') {
+          clearInterval(loginDeviceFlowTimer);
+          loginDeviceFlowTimer = null;
+          sessionStorage.removeItem('gh_device_flow');
+          document.getElementById('login-device-status').textContent = tokenResult.error === 'expired_token' ? '验证码已过期，请重试' : '授权已取消';
+        }
+      } catch (e) {
+        console.error('Resume device flow poll error:', e);
+      }
+    }, interval);
+  } catch (e) {
+    console.error('Resume device flow error:', e);
+  }
 }
 
 // ===== 后台：渲染 =====
@@ -2254,6 +2327,8 @@ if (localStorage.getItem(ADMIN_SESSION_KEY) === '1') {
 }
 initData();
 router();
+// 恢复未完成的 GitHub Device Flow 轮询
+setTimeout(resumeLoginDeviceFlow, 500);
 </script>
 </body>
 </html>
