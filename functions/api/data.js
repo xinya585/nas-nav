@@ -57,7 +57,8 @@ export async function onRequest(context) {
         );
       }
 
-      const text = await rawResp.text();
+      const buffer = await rawResp.arrayBuffer();
+      const text = new TextDecoder('utf-8').decode(buffer);
       const content = JSON.parse(text);
 
       // 再获取 sha 用于后续写入
