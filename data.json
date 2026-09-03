@@ -65,9 +65,9 @@
       "id": "l3",
       "name": "Portainer",
       "url": "http://nas.local:9000",
-      "icon": "PT",
+      "icon": "",
       "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/portainer.png",
-      "color": "#FFFFFF",
+      "color": "#ffffff",
       "desc": "Docker 容器管理",
       "categoryId": "c5",
       "sort": 0
