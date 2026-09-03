@@ -8,6 +8,8 @@ const corsHeaders = {
   'Cache-Control': 'no-store',
 };
 
+const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json; charset=utf-8' };
+
 export async function onRequest(context) {
   const { request, env } = context;
 
@@ -24,7 +26,7 @@ export async function onRequest(context) {
   if (!token) {
     return new Response(
       JSON.stringify({ ok: false, reason: 'not_configured', message: 'GITHUB_TOKEN not set' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: jsonHeaders }
     );
   }
 
@@ -44,14 +46,14 @@ export async function onRequest(context) {
       if (resp.status === 404) {
         return new Response(
           JSON.stringify({ ok: true, data: null, sha: null }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { headers: jsonHeaders }
         );
       }
 
       if (!resp.ok) {
         return new Response(
           JSON.stringify({ ok: false, reason: `http_${resp.status}` }),
-          { status: resp.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: resp.status, headers: jsonHeaders }
         );
       }
 
@@ -60,7 +62,7 @@ export async function onRequest(context) {
       const content = JSON.parse(new TextDecoder().decode(bytes));
       return new Response(
         JSON.stringify({ ok: true, data: content, sha: json.sha }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: jsonHeaders }
       );
     }
 
@@ -84,14 +86,14 @@ export async function onRequest(context) {
         const err = await resp.json().catch(() => ({}));
         return new Response(
           JSON.stringify({ ok: false, reason: `http_${resp.status}`, message: err.message }),
-          { status: resp.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: resp.status, headers: jsonHeaders }
         );
       }
 
       const json = await resp.json();
       return new Response(
         JSON.stringify({ ok: true, sha: json.content?.sha || null }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: jsonHeaders }
       );
     }
 
@@ -99,7 +101,7 @@ export async function onRequest(context) {
   } catch (e) {
     return new Response(
       JSON.stringify({ ok: false, reason: 'network', message: e.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: jsonHeaders }
     );
   }
 }
