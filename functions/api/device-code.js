@@ -33,21 +33,17 @@ export async function onRequest(context) {
     });
 
     const data = await resp.text();
-    // 调试：返回 GitHub 的状态码和响应
-    return new Response(JSON.stringify({
-      debug: true,
-      github_status: resp.status,
-      github_body: data,
-      request_body: body
-    }), {
-      status: 200,
+    return new Response(data, {
+      status: resp.status,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
       }
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: 'proxy_error', detail: err.message, stack: err.stack }), {
+    return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
     });
