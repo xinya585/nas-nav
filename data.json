@@ -62,17 +62,6 @@
       "sort": 0
     },
     {
-      "id": "l9",
-      "name": "Cockpit",
-      "url": "http://nas.local:9090",
-      "icon": "",
-      "iconUrl": "https://raw.githubusercontent.com/xinya585/nas-nav/main/icons/1788447717475_cockpit_png.png",
-      "color": "#ffffff",
-      "desc": "服务器 Web 管理",
-      "categoryId": "c5",
-      "sort": 2
-    },
-    {
       "id": "id_mtlnmw1poekux",
       "sort": 10,
       "name": "Emby",
