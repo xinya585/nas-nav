@@ -131,9 +131,9 @@
       "id": "l10",
       "name": "Prowlarr",
       "url": "http://nas.local:9696",
-      "icon": "PW",
+      "icon": "",
       "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/prowlarr.png",
-      "color": "#FFFFFF",
+      "color": "#ffffff",
       "desc": "索引器管理",
       "categoryId": "c4",
       "sort": 1
