@@ -409,6 +409,46 @@ nas-nav/
 
 > ⚠️ 更新代码时注意不要覆盖你的 `data.json`（你的导航数据），建议更新前先导出备份。
 
+3. **方式三：自动同步（推荐 ⭐）**
+
+   本项目内置了自动同步 workflow，配置后**每天自动从上游拉取最新代码**，无需手动操作。
+
+   **工作原理：**
+   - 每天北京时间 9:00 自动执行
+   - 从上游仓库 `xinya585/nas-nav` 拉取最新代码
+   - **智能跳过** `data.json`（你的导航数据）和 `icons/` 目录（你上传的图标）
+   - 只同步代码文件：`index.html`、`functions/`、`logo.png`、`README.md` 等
+   - 自动提交到你的仓库，Cloudflare Pages 自动部署
+
+   **使用方法：**
+
+   1. Fork 本仓库后，确认 `.github/workflows/sync-from-upstream.yml` 文件存在
+   2. 进入仓库 **Settings** → **Actions** → **General**
+   3. 在 **Workflow permissions** 中选择 **Read and write permissions**
+   4. 点击 **Save** 保存（这一步必须做，否则 workflow 没有推送权限）
+   5. 进入 **Actions** 页面，找到「自动同步上游代码」workflow
+   6. 点击 **Run workflow** 手动触发一次，验证是否正常工作
+
+   **同步的文件：**
+   | 文件/目录 | 说明 |
+   |-----------|------|
+   | `index.html` | 主页面代码 |
+   | `functions/` | Cloudflare Pages Functions |
+   | `logo.png` | 默认 Logo |
+   | `README.md` | 项目文档 |
+   | `.github/workflows/cleanup-deployments.yml` | 自动清理部署 workflow |
+
+   **不同步的文件（保护你的数据）：**
+   | 文件/目录 | 说明 |
+   |-----------|------|
+   | `data.json` | 你的导航数据（服务、分类、设置、密码等） |
+   | `icons/` | 你上传的图标文件 |
+   | `screenshots/` | 截图文件 |
+
+   > 💡 如果上游更新了你想立即获取，可以随时在 Actions 页面手动触发同步，不需要等到每天 9:00。
+
+   > ⚠️ 自动同步只会更新代码文件，**不会修改你的导航数据**。但如果上游的代码结构发生重大变化（如 data.json 格式变更），可能需要手动迁移数据，届时会在 Release 中说明。
+
 ---
 
 ## 🛠️ 技术栈
