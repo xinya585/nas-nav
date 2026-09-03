@@ -1396,6 +1396,7 @@ function renderHome() {
   const $ = id => document.getElementById(id);
   if ($('home-loading')) $('home-loading').style.display = 'none';
   if ($('site-title')) $('site-title').textContent = data.settings.title;
+  document.title = data.settings.title || 'NAS 导航';
   if ($('hero-title')) $('hero-title').textContent = data.settings.heroTitle;
   if ($('hero-subtitle')) $('hero-subtitle').textContent = data.settings.heroSubtitle;
   if ($('footer-text')) $('footer-text').textContent = data.settings.footer;
