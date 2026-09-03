@@ -132,7 +132,7 @@
       "name": "Prowlarr",
       "url": "http://nas.local:9696",
       "icon": "",
-      "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/prowlarr.png",
+      "iconUrl": "https://raw.githubusercontent.com/xinya585/nas-nav/main/icons/1788447695119_prowlarr_png.png",
       "color": "#ffffff",
       "desc": "索引器管理",
       "categoryId": "c4",
