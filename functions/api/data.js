@@ -39,31 +39,39 @@ export async function onRequest(context) {
 
   try {
     if (request.method === 'GET') {
-      const resp = await fetch(`${apiUrl}?ref=${branch}&_t=${Date.now()}`, {
-        headers: ghHeaders,
-      });
+      // 先用 raw 端点获取文本内容（避免 base64 编码问题）
+      const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+      const rawResp = await fetch(rawUrl, { headers: ghHeaders });
 
-      if (resp.status === 404) {
+      if (rawResp.status === 404) {
         return new Response(
           JSON.stringify({ ok: true, data: null, sha: null }),
           { headers: jsonHeaders }
         );
       }
 
-      if (!resp.ok) {
+      if (!rawResp.ok) {
         return new Response(
-          JSON.stringify({ ok: false, reason: `http_${resp.status}` }),
-          { status: resp.status, headers: jsonHeaders }
+          JSON.stringify({ ok: false, reason: `http_${rawResp.status}` }),
+          { status: rawResp.status, headers: jsonHeaders }
         );
       }
 
-      const json = await resp.json();
-      // GitHub 返回的 base64 可能包含换行符，先清理
-      const cleanB64 = json.content.replace(/\s/g, '');
-      const bytes = Uint8Array.from(atob(cleanB64), c => c.charCodeAt(0));
-      const content = JSON.parse(new TextDecoder().decode(bytes));
+      const text = await rawResp.text();
+      const content = JSON.parse(text);
+
+      // 再获取 sha 用于后续写入
+      let sha = null;
+      try {
+        const metaResp = await fetch(`${apiUrl}?ref=${branch}`, { headers: ghHeaders });
+        if (metaResp.ok) {
+          const meta = await metaResp.json();
+          sha = meta.sha;
+        }
+      } catch (e) {}
+
       return new Response(
-        JSON.stringify({ ok: true, data: content, sha: json.sha }),
+        JSON.stringify({ ok: true, data: content, sha }),
         { headers: jsonHeaders }
       );
     }
