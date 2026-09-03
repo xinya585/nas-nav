@@ -120,9 +120,9 @@
       "id": "l8",
       "name": "Nginx Proxy Manager",
       "url": "http://nas.local:81",
-      "icon": "NP",
+      "icon": "",
       "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nginx-proxy-manager.png",
-      "color": "#FFFFFF",
+      "color": "#ffffff",
       "desc": "反向代理管理",
       "categoryId": "c6",
       "sort": 1
