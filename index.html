@@ -1893,8 +1893,8 @@ async function startGithubDeviceFlow() {
   }
 
   try {
-    // 请求 device code
-    const resp = await fetch('https://github.com/login/device/code', {
+    // 请求 device code (通过 Cloudflare Pages Functions 代理，解决 CORS)
+    const resp = await fetch('/api/device-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({
@@ -1922,7 +1922,7 @@ async function startGithubDeviceFlow() {
     if (deviceFlowTimer) clearInterval(deviceFlowTimer);
     deviceFlowTimer = setInterval(async () => {
       try {
-        const tokenResp = await fetch('https://github.com/login/oauth/access_token', {
+        const tokenResp = await fetch('/api/access-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({
