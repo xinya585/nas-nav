@@ -1323,19 +1323,21 @@ function renderAll() {
 
 function renderHome() {
   if (!data) return;
-  document.getElementById('home-loading').style.display = 'none';
-  document.getElementById('site-title').textContent = data.settings.title;
-  document.getElementById('hero-title').textContent = data.settings.heroTitle;
-  document.getElementById('hero-subtitle').textContent = data.settings.heroSubtitle;
-  document.getElementById('footer-text').textContent = data.settings.footer;
-  document.getElementById('service-count').textContent = data.links.length + ' 服务';
-  document.getElementById('category-count').textContent = data.categories.length + ' 分类';
+  const $ = id => document.getElementById(id);
+  if ($('home-loading')) $('home-loading').style.display = 'none';
+  if ($('site-title')) $('site-title').textContent = data.settings.title;
+  if ($('hero-title')) $('hero-title').textContent = data.settings.heroTitle;
+  if ($('hero-subtitle')) $('hero-subtitle').textContent = data.settings.heroSubtitle;
+  if ($('footer-text')) $('footer-text').textContent = data.settings.footer;
+  if ($('service-count')) $('service-count').textContent = data.links.length + ' 服务';
+  if ($('category-count')) $('category-count').textContent = data.categories.length + ' 分类';
   renderCategoryBar();
   renderGrid();
 }
 
 function renderCategoryBar() {
   const bar = document.getElementById('category-bar');
+  if (!bar || !data) return;
   const sortedCats = [...data.categories].sort((a,b) => a.sort - b.sort);
   let html = '<button class="cat-tag ' + (currentCategory === 'all' ? 'active' : '') + '" onclick="filterCategory(\'all\')">全部</button>';
   sortedCats.forEach(cat => {
@@ -1352,6 +1354,7 @@ function filterCategory(id) {
 
 function renderGrid() {
   const container = document.getElementById('grid-container');
+  if (!container || !data) return;
   const q = searchQuery.toLowerCase().trim();
   const sortedCats = [...data.categories].sort((a,b) => a.sort - b.sort);
   let html = '';
