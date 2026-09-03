@@ -1200,8 +1200,7 @@ async function fetchDataFromGithub() {
     const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path || 'data.json'}?ref=${cfg.branch}&_t=${Date.now()}`, {
       headers: {
         'Authorization': 'token ' + cfg.token,
-        'Accept': 'application/vnd.github.v3+json',
-        'Cache-Control': 'no-cache'
+        'Accept': 'application/vnd.github.v3+json'
       },
       cache: 'no-store'
     });
