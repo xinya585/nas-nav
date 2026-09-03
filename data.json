@@ -8,11 +8,6 @@
   },
   "categories": [
     {
-      "id": "c1",
-      "name": "常用",
-      "sort": 0
-    },
-    {
       "id": "c2",
       "name": "媒体娱乐",
       "sort": 1
