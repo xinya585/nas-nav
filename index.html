@@ -1011,6 +1011,26 @@ body {
             <input type="text" class="input" id="setting-icp" placeholder="如：京ICP备12345678号">
           </div>
           <div style="border-top:1px solid var(--border); margin:20px 0; padding-top:20px;">
+            <h3 style="font-size:15px; margin-bottom:16px;">站点 Logo</h3>
+            <div style="display:flex; gap:16px; align-items:flex-start; margin-bottom:12px;">
+              <div id="logo-preview" style="width:64px; height:64px; border-radius:50%; border:2px solid var(--border); overflow:hidden; background:var(--bg-primary); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <img src="/logo.png" id="logo-preview-img" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\\'font-size:24px;color:var(--text-muted);\\'>🖼️</span>'">
+              </div>
+              <div style="flex:1;">
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                  <button type="button" class="btn btn-sm" onclick="document.getElementById('logo-file').click()">上传 Logo</button>
+                  <button type="button" class="btn btn-sm" onclick="resetLogo()">恢复默认</button>
+                </div>
+                <input type="file" id="logo-file" accept="image/*" style="display:none;" onchange="handleLogoUpload(event)">
+                <p style="font-size:12px; color:var(--text-muted);">建议使用正方形图片，上传后自动压缩，立即生效</p>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="label">Logo 图片 URL（可选，优先使用上传的图片）</label>
+              <input type="text" class="input" id="setting-logo-url" placeholder="输入图片 URL，留空则使用默认 Logo">
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border); margin:20px 0; padding-top:20px;">
             <h3 style="font-size:15px; margin-bottom:16px;">背景设置</h3>
             <div class="form-group">
               <label class="label">背景类型</label>
@@ -1212,6 +1232,7 @@ const DEFAULT_DATA = {
     bgColor: '#f2f6f4',
     bgImage: '',
     bgOpacity: 100,
+    logoUrl: '',
     password: 'admin123'
   },
   categories: [
@@ -1530,6 +1551,7 @@ function renderHome() {
   if ($('home-loading')) $('home-loading').style.display = 'none';
   if ($('site-title')) $('site-title').textContent = data.settings.title;
   document.title = data.settings.title || 'NAS 导航';
+  applyLogo();
   if ($('hero-title')) $('hero-title').textContent = data.settings.heroTitle;
   if ($('hero-subtitle')) $('hero-subtitle').textContent = data.settings.heroSubtitle;
   if ($('footer-text')) $('footer-text').textContent = data.settings.footer;
@@ -2172,7 +2194,70 @@ async function handleIconUpload(input) {
   }
 }
 
-// ===== 从库选择图标 =====
+// ===== Logo 上传 =====
+async function handleLogoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    toast('请选择图片文件', 'error');
+    return;
+  }
+
+  try {
+    toast('正在处理 Logo...', 'info');
+    const blob = await compressImage(file, 256);
+    const arrayBuffer = await blob.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const dataUrl = 'data:image/png;base64,' + base64;
+
+    // 保存到设置中
+    data.settings.logoUrl = dataUrl;
+    document.getElementById('setting-logo-url').value = dataUrl;
+    
+    // 更新预览
+    updateLogoPreview(dataUrl);
+    
+    // 立即保存
+    await syncToGithub();
+    toast('Logo 已更新', 'success');
+  } catch (err) {
+    toast('Logo 上传失败：' + err.message, 'error');
+  } finally {
+    event.target.value = '';
+  }
+}
+
+function resetLogo() {
+  data.settings.logoUrl = '';
+  document.getElementById('setting-logo-url').value = '';
+  updateLogoPreview('/logo.png');
+  toast('已恢复默认 Logo，点击保存设置生效', 'info');
+}
+
+function updateLogoPreview(url) {
+  const img = document.getElementById('logo-preview-img');
+  if (img) {
+    img.src = url || '/logo.png';
+    img.style.display = 'block';
+  }
+}
+
+function getLogoUrl() {
+  return data.settings.logoUrl || '/logo.png';
+}
+
+function applyLogo() {
+  const logoUrl = getLogoUrl();
+  // 更新所有 logo 图片
+  document.querySelectorAll('.logo-img').forEach(img => {
+    img.src = logoUrl;
+  });
+  // 更新 favicon
+  const favicon = document.querySelector('link[rel="icon"]');
+  if (favicon) favicon.href = logoUrl;
+  const appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
+  if (appleIcon) appleIcon.href = logoUrl;
+}
 function openIconPicker() {
   if (!isGhConfigured()) {
     toast('请先在「GitHub 配置」中填写 Token', 'error');
@@ -2603,6 +2688,8 @@ function loadSettingsForm() {
   document.getElementById('setting-hero-subtitle').value = data.settings.heroSubtitle;
   document.getElementById('setting-footer').value = data.settings.footer;
   document.getElementById('setting-icp').value = data.settings.icp || '';
+  document.getElementById('setting-logo-url').value = data.settings.logoUrl || '';
+  updateLogoPreview(data.settings.logoUrl || '/logo.png');
   document.getElementById('setting-password').value = '';
   // 背景设置
   const bgType = data.settings.bgType || 'none';
@@ -2621,6 +2708,7 @@ async function saveSettings() {
   data.settings.heroSubtitle = document.getElementById('setting-hero-subtitle').value.trim() || '';
   data.settings.footer = document.getElementById('setting-footer').value.trim() || '';
   data.settings.icp = document.getElementById('setting-icp').value.trim() || '';
+  data.settings.logoUrl = document.getElementById('setting-logo-url').value.trim();
   // 背景设置
   data.settings.bgType = document.getElementById('setting-bg-type').value;
   data.settings.bgColor = document.getElementById('setting-bg-color').value;
