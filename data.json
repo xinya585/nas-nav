@@ -99,7 +99,7 @@
       "name": "Home Assistant",
       "url": "http://nas.local:8123",
       "icon": "",
-      "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/home-assistant.png",
+      "iconUrl": "https://raw.githubusercontent.com/xinya585/nas-nav/main/icons/1788447639579_home_assistant_png.png",
       "color": "#ffffff",
       "desc": "智能家居中枢",
       "categoryId": "c5",
