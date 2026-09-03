@@ -10,7 +10,7 @@
 
 <br>
 
-[🚀 在线预览](https://nav.v9.cc.cd) · [✨ 功能特性](#-功能特性) · [🚀 快速部署](#-快速部署) · [📖 使用说明](#-使用说明)
+[🚀 在线预览](https://nav.v9.cc.cd) · [✨ 功能特性](#-功能特性) · [🚀 部署教程](#-部署教程) · [⚙️ 工作原理](#️-工作原理) · [📖 使用说明](#-使用说明)
 
 <br>
 
@@ -30,7 +30,7 @@
 
 ![后台服务管理](screenshots/admin.png)
 
-### 后台管理 - 站点设置（含背景自定义）
+### 后台管理 - 站点设置（含背景自定义、Logo 更换）
 
 ![站点设置](screenshots/settings.png)
 
@@ -40,86 +40,245 @@
 
 ### 前台展示
 - 🎨 **清新浅绿主题** — 明亮舒适的视觉体验
-- 🖼️ **自定义背景** — 支持单色背景、图片背景，可调节透明度
+- 🖼️ **自定义背景** — 支持单色背景、图片背景，可调节透明度（10%-100%）
+- 🖼️ **自定义 Logo** — 后台上传 Logo 图片，立即生效，同步更新 favicon
 - 🔍 **实时搜索** — 支持按名称、描述、URL 快速筛选
 - 🏷️ **分类筛选** — 一键切换服务分类
 - 🖼️ **图标支持** — 支持图片图标 URL，加载失败自动回退文字缩写
-- 📱 **响应式布局** — 桌面端多列自适应，移动端完美适配
+- 📱 **响应式布局** — 桌面端多列自适应（自动换行），移动端完美适配
 - ⏰ **实时时钟** — 顶部状态栏显示当前时间
-- 🏠 **站点 Logo** — 支持自定义站点图标和 Logo
+- 🌍 **来访 IP 显示** — 时钟旁显示访客 IP 地址
 - 📋 **备案号** — 可在页脚显示备案号，点击跳转工信部
 
 ### 后台管理
 - 🔐 **密码登录** — 默认密码 `admin123`，可在设置中修改
-- 📝 **服务 CRUD** — 添加、编辑、删除服务链接
-- 🖱️ **拖拽排序** — 服务和分类支持拖拽调整顺序
-- 📂 **分类管理** — 自定义服务分类与排序
-- ⚙️ **站点设置** — 自定义标题、副标题、页脚、背景、备案号等
-- 💾 **数据导入导出** — 一键备份与恢复
-- 🖼️ **图标上传** — 支持本地上传图标，自动压缩并上传到 GitHub 仓库
 - ✅ **登录持久化** — 登录状态保存到 localStorage，刷新不丢失
+- 📝 **服务 CRUD** — 添加、编辑、删除服务链接
+- 🖱️ **拖拽排序** — 服务和分类支持拖拽调整顺序，松开自动保存
+- 📂 **分类管理** — 自定义服务分类与排序
+- ⚙️ **站点设置** — 自定义标题、副标题、页脚、背景、Logo、备案号等
+- 💾 **数据导入导出** — 一键备份与恢复（JSON 格式）
+- 🖼️ **图标上传** — 支持本地上传图标，自动压缩到 128×128 并保存
+- 🔗 **GitHub 配置** — 可手动配置 Token，用于图标上传等高级功能
 
-### 部署与同步
+### 部署与运维
 - 🚀 **Cloudflare Pages** — 连接 GitHub 自动部署，全球 CDN 加速
 - 🔗 **自定义域名** — 支持绑定自有域名
-- 📦 **零构建** — 纯静态 HTML，无需构建工具
+- 📦 **零构建** — 纯静态 HTML，无需构建工具，无需 Node.js
 - 🌐 **多设备自动同步** — 通过 Cloudflare Pages Functions 代理 GitHub API，Token 存在服务端环境变量，**前端无需配置任何 Token**，换设备换浏览器自动同步
 - ⚡ **Pages Functions** — 服务端代理 GitHub API，解决 CORS 和 Token 暴露问题
+- 🧹 **自动清理部署** — GitHub Actions 每天自动清理 Cloudflare Pages 旧部署，只保留最新 3 个
 
 ---
 
-## 🚀 快速部署
+## 🚀 部署教程
+
+> 全程约 10 分钟，免费即可完成。
 
 ### 前置准备
 
-1. 一个 GitHub 账号
-2. 一个 Cloudflare 账号（免费版即可）
+| 需要 | 说明 |
+|------|------|
+| GitHub 账号 | 免费注册：https://github.com |
+| Cloudflare 账号 | 免费注册：https://dash.cloudflare.com/sign-up |
+| （可选）自有域名 | 用于绑定自定义访问地址 |
 
-### 第一步：Fork 仓库
+---
 
-Fork 本仓库到你的 GitHub 账号。
+### 第一步：Fork 仓库到你的 GitHub
+
+1. 打开本仓库页面
+2. 点击右上角 **Fork** 按钮
+3. 填写仓库名称（如 `nas-nav`），点击 **Create fork**
+4. 等待 Fork 完成，你会拥有一份完全独立的副本
+
+> 💡 **建议使用私有仓库**：Fork 完成后，进入仓库 **Settings** → **General** → 拉到最底部 **Danger Zone** → **Change repository visibility** → 改为 **Private**。这样你的导航数据（data.json）不会公开。
+
+---
 
 ### 第二步：生成 GitHub Personal Access Token
 
-1. 访问 [GitHub Token 设置页](https://github.com/settings/tokens)
-2. 点击 **Generate new token** → **Generate new token (classic)**
-3. 勾选 `repo` 权限（完整仓库访问权限）
-4. 点击生成，**复制保存 Token**（只显示一次）
+这个 Token 用于 Cloudflare Pages Functions 读写你仓库中的 `data.json` 数据文件。
 
-### 第三步：在 Cloudflare Pages 部署
+1. 访问 [GitHub Token 设置页](https://github.com/settings/tokens)
+2. 点击 **Generate new token** → 选择 **Generate new token (classic)**
+3. 填写：
+   - **Note**：`nas-nav-sync`（随便填，方便识别）
+   - **Expiration**：建议选 `No expiration`（永不过期）
+   - **Select scopes**：勾选 `repo`（完整仓库访问权限，包含所有子项）
+4. 点击页面底部 **Generate token**
+5. **立即复制保存 Token**（格式如 `ghp_xxxxxxxxxxxx`，只显示一次，关闭页面后无法再查看）
+
+> ⚠️ Token 非常重要，相当于你的 GitHub 密码，不要泄露给他人。
+
+---
+
+### 第三步：在 Cloudflare Pages 创建项目
 
 1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com)
-2. 进入 **Workers & Pages** → **Create** → **Pages** → **Connect to Git**
-3. 选择你 Fork 的仓库，点击 **Begin setup**
-4. 构建设置保持默认：
-   - 框架预设：无
-   - 构建命令：留空
-   - 构建输出目录：留空（或 `/`）
-5. 点击 **Save and Deploy**，等待首次部署完成
+2. 左侧菜单点击 **Workers & Pages**
+3. 点击 **Create** → 选择 **Pages** 标签
+4. 点击 **Connect to Git**
+5. 首次使用需要授权 Cloudflare 访问你的 GitHub：
+   - 点击 **Connect GitHub**
+   - 选择 **All repositories** 或只选择你 Fork 的 `nas-nav` 仓库
+   - 点击 **Install & Authorize**
+6. 回到 Cloudflare，选择你 Fork 的仓库，点击 **Begin setup**
+7. 构建设置（**全部保持默认即可**）：
+   - **Project name**：项目名称，会作为默认域名（如 `nas-nav.pages.dev`）
+   - **Production branch**：`main`
+   - **Framework preset**：`None`
+   - **Build command**：留空
+   - **Build output directory**：留空
+8. 点击 **Save and Deploy**
+9. 等待首次部署完成（约 30 秒），点击 **Continue to project**
+
+---
 
 ### 第四步：配置环境变量（关键步骤）
 
-> ⚠️ 这一步是多设备同步的核心，必须配置！
+> ⚠️ 这一步是多设备自动同步的核心，**必须配置**，否则换设备数据不会同步。
 
-1. 在 Cloudflare Pages 项目页面，点击 **设置** → **环境变量**
-2. 点击 **添加**，添加以下变量：
+1. 在 Cloudflare Pages 项目页面，点击顶部 **设置（Settings）** 标签
+2. 左侧菜单点击 **环境变量（Environment variables）**
+3. 在 **Production** 区域，点击 **Add** 逐个添加以下变量：
 
-| 变量名 | 值 | 说明 |
-|--------|-----|------|
-| `GITHUB_TOKEN` | 第二步生成的 Token | 必需，用于读写 GitHub 仓库数据 |
-| `GITHUB_OWNER` | 你的 GitHub 用户名 | 可选，默认读取仓库所有者 |
-| `GITHUB_REPO` | 仓库名（如 `nas-nav`） | 可选，默认 `nas-nav-private` |
-| `GITHUB_BRANCH` | `main` | 可选，默认 `main` |
-| `GITHUB_PATH` | `data.json` | 可选，默认 `data.json` |
+| 变量名 | 值 | 是否必需 | 说明 |
+|--------|-----|----------|------|
+| `GITHUB_TOKEN` | 第二步生成的 Token（`ghp_xxxx...`） | ✅ 必需 | 用于读写 GitHub 仓库数据 |
+| `GITHUB_OWNER` | 你的 GitHub 用户名 | ✅ 必需 | 如 `xinya585` |
+| `GITHUB_REPO` | 仓库名 | ✅ 必需 | 如 `nas-nav` 或 `nas-nav-private` |
+| `GITHUB_BRANCH` | `main` | ⭕ 可选 | 默认 `main` |
+| `GITHUB_PATH` | `data.json` | ⭕ 可选 | 默认 `data.json` |
 
-3. 点击 **保存**
-4. Cloudflare 会自动触发重新部署，等待部署完成
+4. 每个变量添加后点击 **Add** 确认
+5. 全部添加完成后，Cloudflare 会**自动触发重新部署**
+6. 等待部署完成（在 **Deployments** 标签可查看状态）
 
-### 第五步：完成
+---
 
-访问你的 Pages 域名（如 `xxx.pages.dev`），即可使用。
+### 第五步：验证部署
 
-> （可选）在 **自定义域** 中绑定你的自有域名。
+1. 访问你的 Pages 域名（如 `https://nas-nav.pages.dev`）
+2. 应该能看到导航页，顶部显示「已同步 GitHub」绿色状态
+3. 访问 `https://你的域名/#/admin`，输入默认密码 `admin123` 登录后台
+4. 尝试添加一个服务，保存后刷新页面，数据应该保留
+
+> ✅ 如果顶部显示「已同步 GitHub」，说明环境变量配置正确，多设备同步已生效。
+>
+> ❌ 如果显示「本地模式」，说明环境变量配置有误，请检查第四步。
+
+---
+
+### 第六步（可选）：绑定自定义域名
+
+1. 在 Cloudflare Pages 项目页面，点击 **自定义域（Custom domains）**
+2. 点击 **Set up a custom domain**
+3. 输入你的域名（如 `nav.example.com`），点击 **Continue**
+4. 如果域名已在 Cloudflare 托管，会自动配置 DNS；否则需要按提示添加 CNAME 记录
+5. 等待 SSL 证书签发（约 1-2 分钟），即可通过自定义域名访问
+
+---
+
+### 第七步（可选）：配置自动清理部署历史
+
+Cloudflare Pages 会保留每次部署的记录，时间长了会积累很多。本项目内置了 GitHub Actions 工作流，每天自动清理旧部署，只保留最新 3 个。
+
+1. 首先创建 Cloudflare API Token：
+   - 访问 [Cloudflare API Tokens 页面](https://dash.cloudflare.com/profile/api-tokens)
+   - 点击 **Create Token** → **Create Custom Token**
+   - **Token name**：`nas-nav-cleanup`
+   - **Permissions**：选择 `Account` → `Cloudflare Pages` → `Edit`
+   - **Account Resources**：选择你的账户
+   - 点击 **Continue to summary** → **Create Token**
+   - 复制保存 Token（格式如 `cfut_xxxx...`）
+
+2. 在 GitHub 仓库配置 Secrets：
+   - 进入你的仓库 → **Settings** → **Secrets and variables** → **Actions**
+   - 点击 **New repository secret**，逐个添加：
+
+| Secret 名称 | 值 |
+|-------------|-----|
+| `CLOUDFLARE_API_TOKEN` | 上面创建的 Cloudflare API Token |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 账户 ID（在 Pages 项目设置页面可找到） |
+| `CLOUDFLARE_PROJECT_NAME` | Cloudflare Pages 项目名（如 `nas-nav`） |
+
+3. 配置完成后，workflow 会在每天 **北京时间 8:00** 自动执行，也可以在 **Actions** 页面手动触发。
+
+---
+
+## ⚙️ 工作原理
+
+### 数据同步流程
+
+```
+用户浏览器                    Cloudflare Pages              GitHub 仓库
+    │                              │                           │
+    │  1. 访问站点                  │                           │
+    │ ──────────────────────────>  │                           │
+    │                              │  2. Functions 读取 data.json │
+    │                              │ ─────────────────────────>  │
+    │                              │  3. 返回 JSON 数据          │
+    │                              │ <─────────────────────────  │
+    │  4. 渲染页面，显示「已同步」   │                           │
+    │ <──────────────────────────  │                           │
+    │                              │                           │
+    │  5. 后台修改数据，点击保存     │                           │
+    │ ──────────────────────────>  │                           │
+    │                              │  6. Functions 写入 data.json │
+    │                              │ ─────────────────────────>  │
+    │                              │  7. 返回成功                │
+    │                              │ <─────────────────────────  │
+    │  8. 显示保存成功              │                           │
+    │ <──────────────────────────  │                           │
+```
+
+**核心设计**：
+- 前端不直接调用 GitHub API，而是通过 `/api/data` 端点访问 Cloudflare Pages Functions
+- Functions 使用服务端环境变量中的 `GITHUB_TOKEN` 读写 GitHub 的 `data.json`
+- Token 永远不会暴露给前端，安全可靠
+- 换设备、换浏览器无需任何配置，自动从 GitHub 加载最新数据
+
+### 自动清理部署流程
+
+```
+GitHub Actions（每天 8:00）
+    │
+    │  1. 调用 Cloudflare API 列出所有部署
+    │ ──────────────────────────────────────>  Cloudflare API
+    │                                          │
+    │  2. 按时间排序，保留最新 3 个             │
+    │ <──────────────────────────────────────  │
+    │                                          │
+    │  3. 逐个删除其余旧部署                    │
+    │ ──────────────────────────────────────>  Cloudflare API
+    │                                          │
+    │  4. 完成，输出删除报告                    │
+    │ <──────────────────────────────────────  │
+```
+
+### 文件结构说明
+
+```
+nas-nav/
+├── index.html                  # 主页面（包含所有 CSS 和 JS，单文件应用）
+├── data.json                   # 导航数据（后台修改后自动更新，存在 GitHub）
+├── logo.png                    # 默认站点 Logo 和 favicon
+├── functions/                  # Cloudflare Pages Functions（服务端代码）
+│   └── api/
+│       ├── data.js             # 数据代理端点（GET 读取 / PUT 写入 /api/data）
+│       ├── device-code.js      # GitHub Device Flow 代理（可选，用于获取 Token）
+│       └── access-token.js     # GitHub Access Token 代理（可选）
+├── .github/
+│   └── workflows/
+│       └── cleanup-deployments.yml  # 自动清理 Cloudflare Pages 旧部署
+├── icons/                      # 用户上传的图标（自动生成，base64 内嵌在 data.json 中）
+├── screenshots/                # README 预览截图
+│   ├── home.png
+│   ├── admin.png
+│   └── settings.png
+└── README.md                   # 项目说明文档
+```
 
 ---
 
@@ -129,21 +288,29 @@ Fork 本仓库到你的 GitHub 账号。
 
 访问 `https://你的域名/#/admin`，输入默认密码 `admin123` 登录。
 
-> 首次部署后建议立即在「站点设置」中修改密码。
+> 🔐 首次部署后建议立即在「站点设置」中修改密码。
 >
-> 登录状态会自动保存，刷新页面无需重新登录。
+> ✅ 登录状态会自动保存到 localStorage，刷新页面无需重新登录。
+>
+> 🚪 点击后台侧边栏底部的「退出登录」可清除登录状态。
 
 ### 添加服务
 
 1. 进入后台 → **服务链接** → 点击 **添加服务**
-2. 填写服务名称、URL 地址、所属分类
-3. （可选）填写图标文字（1-2 字符）或图标 URL
-4. （可选）点击「上传图片」本地上传图标，自动压缩到 128×128 并上传到 GitHub
-5. 点击保存，前台即时更新并自动同步
+2. 填写：
+   - **服务名称** *（必填）*：显示在卡片上的名称
+   - **URL 地址** *（必填）*：点击卡片跳转的链接
+   - **所属分类**：选择分类
+   - **图标文字**：1-2 个字符，无图片图标时显示
+   - **图标 URL**：图标图片地址，优先显示
+   - **图标颜色**：图标文字背景色（默认纯白色）
+   - **描述**：服务说明，显示在名称下方
+3. （可选）点击「上传图片」本地上传图标，自动压缩到 128×128
+4. 点击保存，前台即时更新并自动同步到 GitHub
 
 ### 拖拽排序
 
-在服务链接或分类管理页面，直接拖拽行首的六点手柄即可调整顺序，松开后自动保存并同步。
+在服务链接或分类管理页面，直接拖拽行首的 **六点手柄**（⋮⋮）即可调整顺序，松开后自动保存并同步。
 
 ### 管理分类
 
@@ -152,13 +319,23 @@ Fork 本仓库到你的 GitHub 账号。
 3. 拖拽调整分类顺序
 4. 服务可在编辑时切换所属分类
 
+### 更换站点 Logo
+
+1. 进入后台 → **站点设置** → 找到「站点 Logo」区域
+2. 点击 **上传 Logo** 选择本地图片（建议正方形）
+3. 图片自动压缩到 256×256，立即生效
+4. 同时更新：页面 Logo、后台 Logo、登录页 Logo、浏览器 favicon
+5. 点击 **恢复默认** 可还原为默认 Logo
+
+> 💡 Logo 以 base64 格式保存在 data.json 中，换设备自动同步，无需等待重新部署。
+
 ### 自定义背景
 
 1. 进入后台 → **站点设置** → 找到「背景设置」
 2. 选择背景类型：
    - **默认（浅绿）**：使用原有的浅绿主题背景
    - **单色背景**：选择任意纯色作为背景
-   - **图片背景**：输入图片 URL 或点击「上传图片」本地上传
+   - **图片背景**：输入图片 URL 或点击「上传图片」本地上传（自动压缩）
 3. 调节背景透明度（10% - 100%）
 4. 点击保存设置
 
@@ -171,13 +348,13 @@ Fork 本仓库到你的 GitHub 账号。
 - 其他设备刷新页面即可看到最新内容
 - 顶部状态栏显示「已同步 GitHub」表示同步正常
 
-> 原理：前端通过 `/api/data` 端点访问 Cloudflare Pages Functions，Functions 使用服务端环境变量中的 Token 读写 GitHub 的 `data.json`，Token 永远不会暴露给前端。
+> 🔧 如果显示「本地模式」，说明 Cloudflare 环境变量配置有误，请参考部署教程第四步检查。
 
 ### 数据备份
 
 在后台 → **数据导入导出** 中：
-- 点击 **导出 JSON** 下载当前数据备份
-- 选择 JSON 文件可恢复数据
+- 点击 **导出 JSON** 下载当前数据备份（包含所有服务、分类、设置）
+- 选择 JSON 文件可恢复数据（会覆盖当前所有数据）
 
 ---
 
@@ -185,34 +362,13 @@ Fork 本仓库到你的 GitHub 账号。
 
 | 类别 | 技术 |
 |------|------|
-| 前端 | 原生 HTML / CSS / JavaScript（单文件，无框架） |
-| 数据存储 | GitHub 仓库（data.json）+ localStorage 缓存 |
+| 前端 | 原生 HTML / CSS / JavaScript（单文件，无框架，无构建） |
+| 数据存储 | GitHub 仓库（data.json）+ localStorage 本地缓存 |
 | 服务端代理 | Cloudflare Pages Functions（/api/data） |
 | 部署 | Cloudflare Pages + Pages Functions |
-| 图标库 | [dashboard-icons](https://github.com/walkxcode/dashboard-icons) |
-| OAuth 代理 | Cloudflare Pages Functions（Device Flow，可选） |
-
----
-
-## 📁 项目结构
-
-```
-nas-nav/
-├── index.html              # 主页面（包含所有 CSS 和 JS）
-├── data.json               # 导航数据（后台修改后自动更新）
-├── logo.png                # 站点 Logo 和 favicon
-├── functions/              # Cloudflare Pages Functions
-│   └── api/
-│       ├── data.js         # 数据代理端点（GET/PUT /api/data）
-│       ├── device-code.js  # GitHub Device Flow 代理（可选）
-│       └── access-token.js # GitHub Access Token 代理（可选）
-├── icons/                  # 用户上传的图标（自动生成）
-├── screenshots/            # 预览截图
-│   ├── home.png
-│   ├── admin.png
-│   └── settings.png
-└── README.md               # 项目说明
-```
+| CI/CD | GitHub Actions（自动清理部署） |
+| 图标库 | [dashboard-icons](https://github.com/walkxcode/dashboard-icons)（CDN 引用） |
+| 字体 | 思源黑体（Noto Sans SC，妙搭 CDN） |
 
 ---
 
@@ -239,17 +395,26 @@ nas-nav/
 
 ## ❓ 常见问题
 
-**Q: 换设备后数据不同步？**
-A: 检查 Cloudflare Pages 环境变量 `GITHUB_TOKEN` 是否配置正确，以及 Token 是否有 `repo` 权限。配置后需要重新部署才生效。
+**Q: 换设备后数据不同步，显示「本地模式」？**
+A: 检查 Cloudflare Pages 环境变量 `GITHUB_TOKEN`、`GITHUB_OWNER`、`GITHUB_REPO` 是否配置正确，以及 Token 是否有 `repo` 权限。配置后需要重新部署才生效。可访问 `https://你的域名/api/data` 验证是否返回 JSON 数据。
 
 **Q: 后台修改后显示同步失败？**
-A: 检查 Token 是否过期，或仓库是否存在。可在后台 → GitHub 配置中重新测试连接。
+A: 检查 Token 是否过期，或仓库是否存在。可在后台 → GitHub 配置中重新测试连接。也可以直接在 GitHub 仓库查看 `data.json` 是否被更新。
 
 **Q: 可以用私有仓库吗？**
-A: 可以。Fork 后在 GitHub 仓库设置中改为 Private，Cloudflare Pages 仍可正常部署和同步。
+A: 可以。Fork 后在 GitHub 仓库设置中改为 Private，Cloudflare Pages 仍可正常部署和同步。推荐使用私有仓库保护你的导航数据。
 
 **Q: 如何修改默认密码？**
 A: 登录后台 → 站点设置 → 修改管理员密码 → 保存设置。
+
+**Q: 上传的图标存在哪里？**
+A: 图标以 base64 格式内嵌在 `data.json` 中，同时也会上传到 GitHub 仓库的 `icons/` 目录。换设备自动同步，无需额外配置。
+
+**Q: Cloudflare Pages 部署历史太多怎么办？**
+A: 参考部署教程第七步配置 GitHub Actions 自动清理，每天自动保留最新 3 个部署。也可以在 Cloudflare Pages 项目的 **Deployments** 页面手动删除。
+
+**Q: 修改 Logo 后需要重新部署吗？**
+A: 不需要。Logo 以 base64 保存在 data.json 中，上传后立即生效，所有设备刷新即可看到。
 
 ---
 
