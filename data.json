@@ -1,7 +1,7 @@
 {
   "settings": {
-    "title": "NAS 导航",
-    "heroTitle": "我的家庭服务中心",
+    "title": "NAS 服务导航",
+    "heroTitle": "我的个人服务页",
     "heroSubtitle": "快速访问所有自托管服务",
     "footer": "NAS Navigation · 部署于 Cloudflare Pages",
     "password": "admin123"
