@@ -42,9 +42,9 @@
     {
       "id": "l3",
       "name": "Portainer",
-      "url": "http://nas.local:9000",
+      "url": "http://zta.cc.cd:9000",
       "icon": "",
-      "iconUrl": "https://raw.githubusercontent.com/xinya585/nas-nav/main/icons/1788447466775_portainer_png.png",
+      "iconUrl": "http://raw.githubusercontent.com/xinya585/nas-nav/main/icons/1788447466775_portainer_png.png",
       "color": "#ffffff",
       "desc": "Docker 容器管理",
       "categoryId": "c5",
