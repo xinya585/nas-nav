@@ -55,7 +55,7 @@
       "name": "Nextcloud",
       "url": "http://nas.local:8080",
       "icon": "",
-      "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nextcloud.png",
+      "iconUrl": "https://raw.githubusercontent.com/xinya585/nas-nav/main/icons/1788447329084_nextcloud_png.png",
       "color": "#ffffff",
       "desc": "私有云盘与协作",
       "categoryId": "c3",
