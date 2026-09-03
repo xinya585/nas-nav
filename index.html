@@ -1126,6 +1126,7 @@ body {
 // ===== 常量与默认数据 =====
 const STORAGE_KEY = 'nas_nav_data';
 const GH_CONFIG_KEY = 'nas_nav_gh_config';
+const ADMIN_SESSION_KEY = 'nas_nav_admin_session';
 const GITHUB_CLIENT_ID = 'Ov23liz7VwOys56PryIZ';
 
 const DEFAULT_DATA = {
@@ -1516,6 +1517,7 @@ function doLogin() {
   const pwd = document.getElementById('login-password').value;
   if (data && pwd === data.settings.password) {
     isAdmin = true;
+    localStorage.setItem(ADMIN_SESSION_KEY, '1');
     document.getElementById('login-password').value = '';
     document.getElementById('login-error').textContent = '';
     location.hash = '#/admin';
@@ -1530,6 +1532,7 @@ document.getElementById('login-password').addEventListener('keypress', function(
 
 function doLogout() {
   isAdmin = false;
+  localStorage.removeItem(ADMIN_SESSION_KEY);
   location.hash = '#/';
 }
 
@@ -1618,6 +1621,7 @@ async function completeGithubLogin(token) {
 
     document.getElementById('login-device-status').textContent = '正在同步数据...';
     isAdmin = true;
+    localStorage.setItem(ADMIN_SESSION_KEY, '1');
     fileSha = null;
     await initData();
 
@@ -1629,6 +1633,7 @@ async function completeGithubLogin(token) {
     document.getElementById('login-device-status').textContent = '登录失败：' + err.message;
     // 即使获取用户信息失败，也用 token 登录
     isAdmin = true;
+    localStorage.setItem(ADMIN_SESSION_KEY, '1');
     location.hash = '#/admin';
     router();
   }
@@ -2242,6 +2247,10 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 });
 
 // ===== 初始化 =====
+// 恢复登录状态
+if (localStorage.getItem(ADMIN_SESSION_KEY) === '1') {
+  isAdmin = true;
+}
 initData();
 router();
 </script>
