@@ -198,6 +198,23 @@ body {
   text-align: right;
 }
 
+.visitor-ip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.visitor-ip svg {
+  opacity: 0.6;
+}
+
 /* ===== 前台：Hero 搜索区 ===== */
 .hero {
   text-align: center;
@@ -757,6 +774,10 @@ body {
       </div>
     </div>
     <div class="status-right">
+      <div class="visitor-ip" id="visitor-ip" title="来访IP">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span id="ip-text">获取中...</span>
+      </div>
       <div class="clock" id="clock">--:--:--</div>
       <a href="#/admin" class="btn btn-sm">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -1642,6 +1663,31 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 updateClock();
+
+// ===== 来访 IP =====
+async function fetchVisitorIP() {
+  const ipEl = document.getElementById('ip-text');
+  if (!ipEl) return;
+  try {
+    const resp = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+    if (resp.ok) {
+      const json = await resp.json();
+      ipEl.textContent = json.ip;
+      return;
+    }
+  } catch (e) {}
+  // 备用：ipapi.co
+  try {
+    const resp = await fetch('https://ipapi.co/json/', { cache: 'no-store' });
+    if (resp.ok) {
+      const json = await resp.json();
+      ipEl.textContent = json.ip;
+      return;
+    }
+  } catch (e) {}
+  ipEl.textContent = '未知';
+}
+fetchVisitorIP();
 
 // ===== 后台：登录 =====
 function doLogin() {
