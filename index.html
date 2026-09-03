@@ -1193,6 +1193,20 @@ function isGhConfigured() {
 
 // ===== GitHub API =====
 async function fetchDataFromGithub() {
+  // 优先使用 Cloudflare Functions 代理（无需每台设备配置 GitHub）
+  try {
+    const res = await fetch('/api/data?_t=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.ok) return json;
+      // not_configured 表示 Functions 未配置环境变量，继续回退
+      if (json.reason !== 'not_configured') return json;
+    }
+  } catch(e) {
+    // Functions 不可用，回退到直接调用 GitHub API
+  }
+
+  // 回退：直接调用 GitHub API（需要浏览器中配置 Token）
   const cfg = getGhConfig();
   if (!isGhConfigured()) return { ok: false, reason: 'not_configured' };
 
@@ -1205,7 +1219,7 @@ async function fetchDataFromGithub() {
       cache: 'no-store'
     });
     if (res.status === 404) {
-      return { ok: true, data: null, sha: null }; // 文件不存在，用默认数据
+      return { ok: true, data: null, sha: null };
     }
     if (!res.ok) {
       return { ok: false, reason: 'http_' + res.status };
@@ -1219,6 +1233,26 @@ async function fetchDataFromGithub() {
 }
 
 async function pushDataToGithub(d) {
+  // 优先使用 Cloudflare Functions 代理
+  try {
+    const res = await fetch('/api/data', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: d, sha: fileSha })
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.ok) {
+        if (json.sha) fileSha = json.sha;
+        return { ok: true };
+      }
+      if (json.reason !== 'not_configured') return json;
+    }
+  } catch(e) {
+    // 回退到直接调用 GitHub API
+  }
+
+  // 回退：直接调用 GitHub API
   const cfg = getGhConfig();
   if (!isGhConfigured()) return { ok: false, reason: 'not_configured' };
 
