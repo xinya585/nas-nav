@@ -39,6 +39,7 @@
 - 🖼️ **图标支持** — 支持图片图标 URL，加载失败自动回退文字缩写
 - 📱 **响应式布局** — 桌面端多列自适应，移动端完美适配
 - ⏰ **实时时钟** — 顶部状态栏显示当前时间
+- 🏠 **站点 Logo** — 支持自定义站点图标和 Logo
 
 ### 后台管理
 - 🔐 **密码登录** — 默认密码 `admin123`，可在设置中修改
@@ -47,12 +48,15 @@
 - ⚙️ **站点设置** — 自定义标题、副标题、页脚等
 - 💾 **数据导入导出** — 一键备份与恢复
 - 🔄 **GitHub 同步** — 配置 Token 后数据自动同步到仓库
+- 🖼️ **图标上传** — 支持本地上传图标，自动压缩并上传到 GitHub 仓库
+- ✅ **登录持久化** — 登录状态保存到 localStorage，刷新不丢失
 
 ### 部署与同步
 - 🚀 **Cloudflare Pages** — 连接 GitHub 自动部署，全球 CDN 加速
 - 🔗 **自定义域名** — 支持绑定自有域名
 - 📦 **零构建** — 纯静态 HTML，无需构建工具
 - 🌐 **多设备同步** — 通过 GitHub API 读写 data.json，数据跨设备一致
+- ⚡ **Pages Functions** — 使用 Cloudflare Functions 代理 GitHub OAuth，解决 CORS 问题
 
 ---
 
@@ -69,9 +73,9 @@
 
 ### 方式二：直接上传
 
-1. 下载本仓库的 `index.html` 和 `data.json`
+1. 下载本仓库的 `index.html`、`data.json` 和 `functions/` 目录
 2. 在 Cloudflare Pages 中选择 **Direct Upload**
-3. 上传这两个文件即可
+3. 上传所有文件即可
 
 ---
 
@@ -82,13 +86,16 @@
 访问 `https://你的域名/#/admin`，输入默认密码 `admin123` 登录。
 
 > 首次部署后建议立即在「站点设置」中修改密码。
+>
+> 登录状态会自动保存，刷新页面无需重新登录。
 
 ### 添加服务
 
 1. 进入后台 → **服务链接** → 点击 **添加服务**
 2. 填写服务名称、URL 地址、所属分类
 3. （可选）填写图标文字（1-2 字符）或图标 URL
-4. 点击保存，前台即时更新
+4. （可选）点击「上传图片」本地上传图标，自动压缩到 128×128 并上传到 GitHub
+5. 点击保存，前台即时更新
 
 ### 管理分类
 
@@ -110,6 +117,8 @@
 5. 配置成功后，所有修改会自动同步到 GitHub 仓库的 `data.json`
 
 > 配置 GitHub 同步后，在其他设备上访问站点并填写相同配置，即可自动拉取最新数据。
+>
+> 上传的图标会自动保存到仓库的 `icons/` 目录。
 
 ### 数据备份
 
@@ -125,8 +134,9 @@
 |------|------|
 | 前端 | 原生 HTML / CSS / JavaScript（单文件，无框架） |
 | 数据存储 | localStorage + GitHub API |
-| 部署 | Cloudflare Pages |
+| 部署 | Cloudflare Pages + Pages Functions |
 | 图标库 | [dashboard-icons](https://github.com/walkxcode/dashboard-icons) |
+| OAuth 代理 | Cloudflare Pages Functions（Device Flow） |
 
 ---
 
@@ -134,13 +144,19 @@
 
 ```
 nas-nav/
-├── index.html          # 主页面（包含所有 CSS 和 JS）
-├── data.json           # 默认导航数据
-├── screenshots/        # 预览截图
+├── index.html              # 主页面（包含所有 CSS 和 JS）
+├── data.json               # 默认导航数据
+├── logo.png                # 站点 Logo 和 favicon
+├── functions/              # Cloudflare Pages Functions
+│   └── api/
+│       ├── device-code.js  # GitHub Device Flow 代理
+│       └── access-token.js # GitHub Access Token 代理
+├── icons/                  # 用户上传的图标（自动生成）
+├── screenshots/            # 预览截图
 │   ├── home.png
 │   ├── admin.png
 │   └── categories.png
-└── README.md           # 项目说明
+└── README.md               # 项目说明
 ```
 
 ---
@@ -183,4 +199,3 @@ nas-nav/
 **如果这个项目对你有帮助，别忘了给个 ⭐ Star 支持一下！**
 
 </div>
-
