@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NAS 导航</title>
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="apple-touch-icon" href="/logo.png">
 <link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
 <style>
 /* ===== CSS 变量与主题 ===== */
@@ -151,6 +153,14 @@ body {
   border-radius: 50%;
   box-shadow: 0 0 8px var(--accent-glow);
   animation: pulse 2s infinite;
+}
+.logo-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+  object-fit: cover;
 }
 @keyframes pulse {
   0%, 100% { opacity: 1; }
@@ -718,7 +728,7 @@ body {
 <div id="view-home" class="view active">
   <header class="status-bar">
     <div class="status-left">
-      <div class="logo"><span class="logo-dot"></span><span id="site-title">NAS 导航</span></div>
+      <div class="logo"><img src="/logo.png" alt="logo" class="logo-img"><span id="site-title">NAS 导航</span></div>
       <div class="status-meta">
         <span id="service-count">0 服务</span>
         <span class="sep">|</span>
@@ -763,7 +773,7 @@ body {
 <div id="view-login" class="view">
   <div class="login-wrap">
     <div class="login-card">
-      <div class="logo"><span class="logo-dot"></span>管理后台</div>
+      <div class="logo"><img src="/logo.png" alt="logo" class="logo-img">管理后台</div>
       <p class="login-sub">请登录以继续</p>
       <div class="form-group">
         <input type="password" class="input" id="login-password" placeholder="管理员密码" autocomplete="current-password">
@@ -785,15 +795,18 @@ body {
       <!-- GitHub Device Flow 授权面板 -->
       <div id="login-device-flow-panel" style="display:none;margin-top:16px;padding:16px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);text-align:left;">
         <div style="font-weight:600;margin-bottom:8px;font-size:14px;">GitHub 设备授权</div>
-        <div style="margin-bottom:12px;font-size:13px;">
-          请打开 <a href="https://github.com/login/device" target="_blank" style="color:var(--accent);font-weight:600;">github.com/login/device</a>
+        <div style="margin-bottom:12px;font-size:13px;line-height:1.6;">
+          1. 复制下方验证码<br>
+          2. 点击 <a href="https://github.com/login/device" target="_blank" style="color:var(--accent);font-weight:600;">打开 GitHub 授权页面</a>（新标签页）<br>
+          3. 粘贴验证码并点击授权<br>
+          4. <strong>授权成功后返回此页面，将自动登录</strong>
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
           <span style="font-size:12px;color:var(--text-muted);">验证码：</span>
           <code id="login-device-code" style="font-size:18px;font-weight:700;letter-spacing:2px;background:var(--bg);padding:4px 12px;border-radius:6px;border:1px solid var(--border);"></code>
           <button type="button" class="btn" style="font-size:11px;padding:3px 8px;" onclick="copyLoginDeviceCode()">复制</button>
         </div>
-        <div id="login-device-status" style="font-size:12px;color:var(--text-muted);">等待授权中...</div>
+        <div id="login-device-status" style="font-size:12px;color:var(--text-muted);">等待授权中...请勿关闭此页面</div>
         <button type="button" class="btn" style="margin-top:10px;font-size:12px;" onclick="cancelLoginDeviceFlow()">取消</button>
       </div>
 
@@ -810,7 +823,7 @@ body {
     <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
     <aside class="admin-sidebar" id="admin-sidebar">
       <div class="admin-brand">
-        <div class="logo"><span class="logo-dot"></span>管理后台</div>
+        <div class="logo"><img src="/logo.png" alt="logo" class="logo-img">管理后台</div>
       </div>
       <nav class="admin-nav">
         <div class="admin-nav-item active" data-tab="links" onclick="switchTab('links')">
@@ -926,15 +939,18 @@ body {
           </div>
           <div id="device-flow-panel" style="display:none;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;">
             <div style="font-weight:600;margin-bottom:8px;">GitHub 设备授权</div>
-            <div style="margin-bottom:12px;font-size:14px;">
-              请在浏览器中打开 <a href="https://github.com/login/device" target="_blank" style="color:var(--accent);font-weight:600;">https://github.com/login/device</a>
+            <div style="margin-bottom:12px;font-size:13px;line-height:1.6;">
+              1. 复制下方验证码<br>
+              2. 点击 <a href="https://github.com/login/device" target="_blank" style="color:var(--accent);font-weight:600;">打开 GitHub 授权页面</a>（新标签页）<br>
+              3. 粘贴验证码并点击授权<br>
+              4. <strong>授权成功后返回此页面，将自动配置</strong>
             </div>
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
               <span style="font-size:13px;color:var(--text-muted);">输入验证码：</span>
               <code id="device-flow-code" style="font-size:20px;font-weight:700;letter-spacing:2px;background:var(--bg);padding:6px 16px;border-radius:6px;border:1px solid var(--border);"></code>
               <button type="button" class="btn" style="font-size:12px;padding:4px 10px;" onclick="copyDeviceCode()">复制</button>
             </div>
-            <div id="device-flow-status" style="font-size:13px;color:var(--text-muted);">等待授权中...</div>
+            <div id="device-flow-status" style="font-size:13px;color:var(--text-muted);">等待授权中...请勿关闭此页面</div>
             <button type="button" class="btn" style="margin-top:12px;font-size:12px;" onclick="cancelDeviceFlow()">取消</button>
           </div>
           <div class="form-group">
