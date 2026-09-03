@@ -1197,11 +1197,13 @@ async function fetchDataFromGithub() {
   if (!isGhConfigured()) return { ok: false, reason: 'not_configured' };
 
   try {
-    const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path || 'data.json'}?ref=${cfg.branch}`, {
+    const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path || 'data.json'}?ref=${cfg.branch}&_t=${Date.now()}`, {
       headers: {
         'Authorization': 'token ' + cfg.token,
-        'Accept': 'application/vnd.github.v3+json'
-      }
+        'Accept': 'application/vnd.github.v3+json',
+        'Cache-Control': 'no-cache'
+      },
+      cache: 'no-store'
     });
     if (res.status === 404) {
       return { ok: true, data: null, sha: null }; // 文件不存在，用默认数据
