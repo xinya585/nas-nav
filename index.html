@@ -900,6 +900,17 @@ body {
             </button>
           </div>
         </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <label style="font-size:13px;color:var(--text-secondary);">分类筛选：</label>
+            <select class="input" id="link-filter-cat" style="width:160px;" onchange="linkFilterCat=this.value;linkPage=1;renderLinksTable()">
+              <option value="all">全部分类</option>
+            </select>
+          </div>
+          <span id="link-count-info" style="font-size:13px;color:var(--text-muted);"></span>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:8px;" id="link-pagination">
+          </div>
+        </div>
         <table class="data-table" id="links-table">
           <thead>
             <tr><th style="width:36px;"></th><th>图标</th><th>名称</th><th>URL</th><th>分类</th><th>描述</th><th>操作</th></tr>
@@ -1277,6 +1288,10 @@ let searchQuery = '';
 let isAdmin = false;
 let currentTab = 'links';
 let syncState = 'local'; // local | synced | syncing | error
+// 后台服务列表筛选与分页
+let linkFilterCat = 'all';
+let linkPage = 1;
+const LINK_PAGE_SIZE = 20;
 
 // ===== GitHub 配置 =====
 function getGhConfig() {
@@ -2027,8 +2042,34 @@ function renderLinksTable() {
   const tbody = document.getElementById('links-tbody');
   const catMap = {};
   data.categories.forEach(c => catMap[c.id] = c.name);
+
+  // 更新分类筛选下拉
+  const catSelect = document.getElementById('link-filter-cat');
+  if (catSelect) {
+    const currentVal = catSelect.value;
+    let opts = '<option value="all">全部分类</option>';
+    [...data.categories].sort((a,b) => a.sort - b.sort).forEach(c => {
+      opts += '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>';
+    });
+    catSelect.innerHTML = opts;
+    catSelect.value = currentVal || 'all';
+    linkFilterCat = catSelect.value;
+  }
+
+  // 筛选
+  let filtered = data.links.filter(l => linkFilterCat === 'all' || l.categoryId === linkFilterCat);
+  filtered.sort((a,b) => a.sort - b.sort);
+
+  // 分页
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / LINK_PAGE_SIZE));
+  if (linkPage > totalPages) linkPage = totalPages;
+  const start = (linkPage - 1) * LINK_PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + LINK_PAGE_SIZE);
+
+  // 渲染表格
   let html = '';
-  data.links.sort((a,b) => a.sort - b.sort).forEach(link => {
+  pageItems.forEach(link => {
     const iconText = link.icon || link.name.charAt(0).toUpperCase();
     const cellIcon = link.iconUrl
       ? '<img src="' + escapeAttr(link.iconUrl) + '" style="width:32px;height:32px;border-radius:6px;object-fit:cover;">'
@@ -2046,9 +2087,28 @@ function renderLinksTable() {
     html += '</div></td></tr>';
   });
   if (!html) {
-    html = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">暂无服务，点击上方按钮添加</td></tr>';
+    html = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">该分类下暂无服务</td></tr>';
   }
   tbody.innerHTML = html;
+
+  // 更新计数信息
+  const countInfo = document.getElementById('link-count-info');
+  if (countInfo) {
+    countInfo.textContent = total > 0 ? '共 ' + total + ' 个服务' + (linkFilterCat !== 'all' ? '（当前分类）' : '') : '';
+  }
+
+  // 渲染分页
+  const pagEl = document.getElementById('link-pagination');
+  if (pagEl) {
+    if (totalPages > 1) {
+      let pagHtml = '<button class="btn btn-sm" onclick="linkPage=Math.max(1,linkPage-1);renderLinksTable()"' + (linkPage <= 1 ? ' disabled' : '') + '>上一页</button>';
+      pagHtml += '<span style="font-size:13px;color:var(--text-secondary);">第 ' + linkPage + ' / ' + totalPages + ' 页</span>';
+      pagHtml += '<button class="btn btn-sm" onclick="linkPage=Math.min(' + totalPages + ',linkPage+1);renderLinksTable()"' + (linkPage >= totalPages ? ' disabled' : '') + '>下一页</button>';
+      pagEl.innerHTML = pagHtml;
+    } else {
+      pagEl.innerHTML = '';
+    }
+  }
 }
 
 function renderCategoriesTable() {
