@@ -1,0 +1,85 @@
+name: 自动同步上游代码
+
+# 触发条件：
+# 1. 每天北京时间 9:00 自动执行（UTC 1:00）
+# 2. 支持在 Actions 页面手动触发
+on:
+  schedule:
+    - cron: '0 1 * * *'  # UTC 1:00 = 北京时间 9:00
+  workflow_dispatch:
+    inputs:
+      force:
+        description: '强制同步（即使没有更新也提交）'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    # 保护机制：如果当前仓库就是上游仓库本身，则跳过（避免自己同步自己）
+    if: github.repository != 'xinya585/nas-nav'
+    steps:
+      - name: 检出当前仓库
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 配置 Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: 添加上游仓库并拉取最新代码
+        run: |
+          git remote add upstream https://github.com/xinya585/nas-nav.git
+          git fetch upstream main --depth=1
+          echo "上游最新 commit: $(git log upstream/main -1 --oneline)"
+
+      - name: 同步代码文件（跳过用户数据）
+        run: |
+          # 需要同步的代码文件/目录
+          # 注意：不同步 data.json（用户的导航数据）
+          # 注意：不同步 icons/ 目录（用户上传的图标）
+          FILES_TO_SYNC=(
+            "index.html"
+            "logo.png"
+            "README.md"
+            "functions/"
+            ".github/workflows/cleanup-deployments.yml"
+          )
+
+          for item in "${FILES_TO_SYNC[@]}"; do
+            if git ls-tree -r --name-only upstream/main | grep -q "^${item%/}"; then
+              echo "同步: $item"
+              git checkout upstream/main -- "$item" 2>/dev/null || true
+            else
+              echo "上游不存在，跳过: $item"
+            fi
+          done
+
+          # 显示变更
+          echo "=== 变更文件列表 ==="
+          git status --short
+
+      - name: 检查是否有更新
+        id: check
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+            echo "检测到代码更新，准备提交"
+          else
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+            echo "代码已是最新，无需更新"
+          fi
+
+      - name: 提交并推送更新
+        if: steps.check.outputs.has_updates == 'true' || github.event.inputs.force == 'true'
+        run: |
+          git add -A
+          git commit -m "🔄 自动同步上游代码 $(date +'%Y-%m-%d %H:%M')" || echo "没有变更可提交"
+          git push origin main
+          echo "✅ 同步完成，已推送到 main 分支"
+          echo "Cloudflare Pages 将自动触发部署"
