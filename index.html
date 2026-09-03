@@ -39,6 +39,19 @@ body {
   min-height: 100vh;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+/* 背景层 */
+#bg-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 
 /* ===== 通用组件 ===== */
@@ -728,6 +741,8 @@ body {
 </head>
 <body>
 
+<div id="bg-layer"></div>
+
 <!-- ===== 视图：前台导航 ===== -->
 <div id="view-home" class="view active">
   <header class="status-bar">
@@ -974,6 +989,36 @@ body {
             <label class="label">备案号（可选，显示在页脚）</label>
             <input type="text" class="input" id="setting-icp" placeholder="如：京ICP备12345678号">
           </div>
+          <div style="border-top:1px solid var(--border); margin:20px 0; padding-top:20px;">
+            <h3 style="font-size:15px; margin-bottom:16px;">背景设置</h3>
+            <div class="form-group">
+              <label class="label">背景类型</label>
+              <select class="input" id="setting-bg-type" onchange="toggleBgSettings()">
+                <option value="none">默认（浅绿）</option>
+                <option value="color">单色背景</option>
+                <option value="image">图片背景</option>
+              </select>
+            </div>
+            <div class="form-group" id="bg-color-group" style="display:none;">
+              <label class="label">背景颜色</label>
+              <div style="display:flex; gap:10px; align-items:center;">
+                <input type="color" id="setting-bg-color" value="#f2f6f4" style="width:50px; height:38px; border:1px solid var(--border); border-radius:8px; cursor:pointer; padding:2px;">
+                <input type="text" class="input" id="setting-bg-color-text" value="#f2f6f4" style="flex:1;" oninput="document.getElementById('setting-bg-color').value=this.value">
+              </div>
+            </div>
+            <div class="form-group" id="bg-image-group" style="display:none;">
+              <label class="label">背景图片 URL</label>
+              <div style="display:flex; gap:8px;">
+                <input type="text" class="input" id="setting-bg-image" style="flex:1;">
+                <button type="button" class="btn" onclick="uploadBgImage()">上传图片</button>
+              </div>
+              <input type="file" id="bg-image-file" accept="image/*" style="display:none;" onchange="handleBgImageUpload(event)">
+            </div>
+            <div class="form-group" id="bg-opacity-group" style="display:none;">
+              <label class="label">背景透明度：<span id="bg-opacity-value">100</span>%</label>
+              <input type="range" id="setting-bg-opacity" min="10" max="100" value="100" style="width:100%;" oninput="document.getElementById('bg-opacity-value').textContent=this.value">
+            </div>
+          </div>
           <div class="form-group">
             <label class="label">修改管理员密码（留空则不修改）</label>
             <input type="password" class="input" id="setting-password" placeholder="输入新密码">
@@ -1142,6 +1187,10 @@ const DEFAULT_DATA = {
     heroSubtitle: '快速访问所有自托管服务',
     footer: 'NAS Navigation · 部署于 Cloudflare Pages',
     icp: '',
+    bgType: 'none',
+    bgColor: '#f2f6f4',
+    bgImage: '',
+    bgOpacity: 100,
     password: 'admin123'
   },
   categories: [
@@ -1463,6 +1512,8 @@ function renderHome() {
   if ($('hero-title')) $('hero-title').textContent = data.settings.heroTitle;
   if ($('hero-subtitle')) $('hero-subtitle').textContent = data.settings.heroSubtitle;
   if ($('footer-text')) $('footer-text').textContent = data.settings.footer;
+  // 应用背景设置
+  applyBackground();
   const icpEl = $('footer-icp');
   if (icpEl) {
     if (data.settings.icp) {
@@ -1478,6 +1529,33 @@ function renderHome() {
   if ($('category-count')) $('category-count').textContent = data.categories.length + ' 分类';
   renderCategoryBar();
   renderGrid();
+}
+
+function applyBackground() {
+  const layer = document.getElementById('bg-layer');
+  if (!layer || !data) return;
+  const bgType = data.settings.bgType || 'none';
+  const opacity = (data.settings.bgOpacity != null ? data.settings.bgOpacity : 100) / 100;
+
+  if (bgType === 'none') {
+    layer.style.background = 'transparent';
+    layer.style.opacity = '1';
+    document.body.style.background = 'var(--bg-primary)';
+    return;
+  }
+
+  document.body.style.background = 'var(--bg-primary)';
+
+  if (bgType === 'color') {
+    layer.style.background = data.settings.bgColor || '#f2f6f4';
+    layer.style.opacity = opacity;
+  } else if (bgType === 'image' && data.settings.bgImage) {
+    layer.style.background = `url('${data.settings.bgImage}') center/cover no-repeat fixed`;
+    layer.style.opacity = opacity;
+  } else {
+    layer.style.background = 'transparent';
+    layer.style.opacity = '1';
+  }
 }
 
 function renderCategoryBar() {
@@ -2439,6 +2517,39 @@ function cancelDeviceFlow() {
 }
 
 // ===== 后台：设置 =====
+function toggleBgSettings() {
+  const type = document.getElementById('setting-bg-type').value;
+  document.getElementById('bg-color-group').style.display = type === 'color' ? 'block' : 'none';
+  document.getElementById('bg-image-group').style.display = type === 'image' ? 'block' : 'none';
+  document.getElementById('bg-opacity-group').style.display = (type === 'color' || type === 'image') ? 'block' : 'none';
+}
+
+function uploadBgImage() {
+  document.getElementById('bg-image-file').click();
+}
+
+function handleBgImageUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const maxW = 1920;
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = h * maxW / w; w = maxW; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      document.getElementById('setting-bg-image').value = dataUrl;
+      toast('背景图片已加载', 'success');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 function loadSettingsForm() {
   if (!data) return;
   document.getElementById('setting-title').value = data.settings.title;
@@ -2447,6 +2558,15 @@ function loadSettingsForm() {
   document.getElementById('setting-footer').value = data.settings.footer;
   document.getElementById('setting-icp').value = data.settings.icp || '';
   document.getElementById('setting-password').value = '';
+  // 背景设置
+  const bgType = data.settings.bgType || 'none';
+  document.getElementById('setting-bg-type').value = bgType;
+  document.getElementById('setting-bg-color').value = data.settings.bgColor || '#f2f6f4';
+  document.getElementById('setting-bg-color-text').value = data.settings.bgColor || '#f2f6f4';
+  document.getElementById('setting-bg-image').value = data.settings.bgImage || '';
+  document.getElementById('setting-bg-opacity').value = data.settings.bgOpacity != null ? data.settings.bgOpacity : 100;
+  document.getElementById('bg-opacity-value').textContent = data.settings.bgOpacity != null ? data.settings.bgOpacity : 100;
+  toggleBgSettings();
 }
 
 async function saveSettings() {
@@ -2455,6 +2575,11 @@ async function saveSettings() {
   data.settings.heroSubtitle = document.getElementById('setting-hero-subtitle').value.trim() || '';
   data.settings.footer = document.getElementById('setting-footer').value.trim() || '';
   data.settings.icp = document.getElementById('setting-icp').value.trim() || '';
+  // 背景设置
+  data.settings.bgType = document.getElementById('setting-bg-type').value;
+  data.settings.bgColor = document.getElementById('setting-bg-color').value;
+  data.settings.bgImage = document.getElementById('setting-bg-image').value.trim();
+  data.settings.bgOpacity = parseInt(document.getElementById('setting-bg-opacity').value);
   const newPwd = document.getElementById('setting-password').value;
   if (newPwd) data.settings.password = newPwd;
   renderAll();
