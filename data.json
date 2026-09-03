@@ -76,9 +76,9 @@
       "id": "l4",
       "name": "qBittorrent",
       "url": "http://nas.local:8081",
-      "icon": "QB",
+      "icon": "",
       "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/qbittorrent.png",
-      "color": "#FFFFFF",
+      "color": "#ffffff",
       "desc": "BT 下载客户端",
       "categoryId": "c4",
       "sort": 0
