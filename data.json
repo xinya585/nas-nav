@@ -57,6 +57,17 @@
       "sort": 0
     },
     {
+      "id": "id_mtlp6yeux9gwi",
+      "sort": 3,
+      "name": "Synology",
+      "url": "http://zta.cc.cd:5500",
+      "icon": "",
+      "iconUrl": "https://raw.githubusercontent.com/xinya585/nas-nav/main/icons/1788450345431_synology_png.png",
+      "color": "#ffffff",
+      "categoryId": "c3",
+      "desc": "群晖NAS管理"
+    },
+    {
       "id": "id_mtlnmw1poekux",
       "sort": 10,
       "name": "Emby",
