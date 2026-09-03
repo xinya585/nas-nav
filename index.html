@@ -1033,12 +1033,12 @@ body {
       <input type="hidden" id="link-id">
       <div class="form-group">
         <label class="label">服务名称 *</label>
-        <input type="text" class="input" id="link-name" placeholder="如：Jellyfin">
+        <input type="text" class="input" id="link-name">
       </div>
       <div class="form-row">
         <div class="form-group">
           <label class="label">图标文字（1-2字符）</label>
-          <input type="text" class="input" id="link-icon" placeholder="如：JF" maxlength="4">
+          <input type="text" class="input" id="link-icon" maxlength="4">
         </div>
         <div class="form-group">
           <label class="label">图标颜色</label>
@@ -1048,7 +1048,7 @@ body {
       <div class="form-group">
         <label class="label">图标 URL（可选，优先显示图片）</label>
         <div style="display:flex;gap:8px;align-items:center;">
-          <input type="text" class="input" id="link-icon-url" placeholder="如：https://example.com/icon.png" style="flex:1;">
+          <input type="text" class="input" id="link-icon-url" style="flex:1;">
           <input type="file" id="link-icon-file" accept="image/*" style="display:none;" onchange="handleIconUpload(this)">
           <button type="button" class="btn" style="white-space:nowrap;" onclick="document.getElementById('link-icon-file').click()">上传图片</button>
           <button type="button" class="btn" style="white-space:nowrap;" onclick="openIconPicker()">从库选择</button>
@@ -1061,7 +1061,7 @@ body {
       </div>
       <div class="form-group">
         <label class="label">URL 地址 *</label>
-        <input type="text" class="input" id="link-url" placeholder="如：http://192.168.1.10:8096">
+        <input type="text" class="input" id="link-url">
       </div>
       <div class="form-group">
         <label class="label">所属分类 *</label>
