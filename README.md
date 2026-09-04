@@ -8,6 +8,7 @@
 
 [![版本](https://img.shields.io/badge/version-1.0.0-059669?style=flat-square)]()
 [![部署状态](https://img.shields.io/badge/Cloudflare-Pages-059669?style=flat-square&logo=cloudflare)](https://pages.cloudflare.com)
+[![Docker](https://img.shields.io/badge/Docker-xinya585/nas--nav-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/xinya585/nas-nav)
 [![GitHub](https://img.shields.io/badge/GitHub-Data%20Sync-181717?style=flat-square&logo=github)](https://github.com)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
@@ -24,7 +25,7 @@
 
 <br>
 
-[🚀 在线预览](https://nav.scy.cc.cd) · [✨ 功能特性](#-功能特性) · [🚀 部署教程](#-部署教程) · [⚙️ 工作原理](#️-工作原理) · [📖 使用说明](#-使用说明) · [❓ 常见问题](#-常见问题)
+[🚀 在线预览](https://nav.scy.cc.cd) · [✨ 功能特性](#-功能特性) · [🚀 Cloudflare 部署](#-部署教程) · [🐳 Docker 部署](#-docker-部署本地-nas-用户推荐) · [⚙️ 工作原理](#️-工作原理) · [📖 使用说明](#-使用说明) · [❓ 常见问题](#-常见问题)
 
 <br>
 
@@ -95,6 +96,7 @@
 | 功能 | 说明 |
 |------|------|
 | **Cloudflare Pages** | 连接 GitHub 仓库自动部署，全球 CDN 加速，免费额度充足 |
+| **Docker 镜像** | 已发布到 Docker Hub，支持 `docker run` / `docker-compose` / 群晖图形界面一键部署，纯本地运行无需 GitHub |
 | **多设备自动同步** | 通过 Cloudflare Pages Functions 代理 GitHub API，Token 存在服务端环境变量，**前端无需配置任何 Token**，换设备换浏览器自动同步 |
 | **Pages Functions** | 服务端代理 GitHub API，解决 CORS 跨域和 Token 暴露问题 |
 | **自动清理部署** | GitHub Actions 每天北京时间 8:00 自动清理 Cloudflare Pages 旧部署，只保留最新 3 个 |
@@ -375,6 +377,129 @@ Fork 完成后，点击下方按钮跳转到 Cloudflare Pages 创建页面：
 4. 确认执行成功（会显示同步了哪些文件）
 
 > ⚠️ **注意**：自动同步只会更新代码文件（`index.html`、`functions/`、`logo.png`、`README.md`、workflow 文件等），**不会修改你的 `data.json` 导航数据和 `icons/` 图标文件**。如果上游的代码结构发生重大变化（如 `data.json` 格式变更），可能需要手动迁移数据，届时会在 Release 中说明。
+
+---
+
+## 🐳 Docker 部署（本地 NAS 用户推荐）
+
+> 如果你有自己的 NAS（群晖、Unraid、威联通等），推荐使用 Docker 部署。**纯本地运行，不需要 GitHub，不需要 Cloudflare，零配置，数据完全在自己手里。**
+
+### Docker 版优势
+
+| 对比项 | Cloudflare 版 | Docker 版 |
+|--------|--------------|-----------|
+| GitHub 依赖 | 必需 | ❌ 不需要 |
+| 环境变量配置 | 必需（3个） | ❌ 零配置 |
+| 外网依赖 | 必需 | ✅ 纯本地运行 |
+| 多设备同步 | 通过 GitHub | ✅ 访问同一地址天然同步 |
+| 保存速度 | 调用 GitHub API（慢） | ✅ 写本地文件（快） |
+| 数据隐私 | 存在 GitHub | ✅ 完全本地 |
+
+### 镜像信息
+
+- **Docker Hub**：https://hub.docker.com/r/xinya585/nas-nav
+- **镜像大小**：约 195MB
+- **支持架构**：amd64（x86_64）
+- **版本标签**：`latest`（最新版）、`v1.0.0`（指定版本）
+
+### 方式一：docker run（最简单）
+
+```bash
+docker run -d \
+  --name nas-nav \
+  -p 8080:80 \
+  -v /volume1/docker/nas-nav/data:/data \
+  --restart unless-stopped \
+  xinya585/nas-nav:latest
+```
+
+### 方式二：docker-compose（推荐）
+
+创建 `docker-compose.yml`：
+
+```yaml
+version: '3.8'
+
+services:
+  nas-nav:
+    image: xinya585/nas-nav:latest
+    container_name: nas-nav
+    restart: unless-stopped
+    ports:
+      - "8080:80"    # 左边是宿主机端口，可自定义修改
+    volumes:
+      - ./data:/data  # 数据持久化（导航数据 + 图标）
+    environment:
+      - TZ=Asia/Shanghai
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+```
+
+启动：
+
+```bash
+docker-compose up -d
+```
+
+### 方式三：群晖 Container Manager（图形界面）
+
+1. 打开 **Container Manager** → **注册表**
+2. 搜索 `xinya585/nas-nav`，选择 `latest` 标签下载
+3. 下载完成后，点击 **启动**
+4. **端口设置**：本地端口填 `8080`（可自定义），容器端口 `80`
+5. **存储空间设置**：添加文件夹，装载路径 `/data`
+6. 点击 **下一步** → **完成**
+
+### 参数说明
+
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| `-p 8080:80` | 端口映射，左边可自定义 | 8080 |
+| `-v /path:/data` | 数据持久化目录 | **必需** |
+| `--restart unless-stopped` | 自动重启 | 建议开启 |
+| `-e TZ=Asia/Shanghai` | 时区设置 | Asia/Shanghai |
+
+### 数据目录结构
+
+挂载的 `/data` 目录包含：
+
+```
+/data/
+├── data.json    # 导航数据（服务、分类、设置）
+└── icons/       # 上传的图标文件
+```
+
+> ⚠️ **重要**：务必挂载 `/data` 卷，否则容器删除后数据会丢失！
+
+### 访问信息
+
+- **前台地址**：`http://你的NAS_IP:8080`
+- **后台地址**：`http://你的NAS_IP:8080/#/admin`
+- **默认密码**：`admin123`（首次登录后请立即修改）
+
+### 更新版本
+
+```bash
+# 拉取最新镜像
+docker pull xinya585/nas-nav:latest
+
+# 重建容器（数据不会丢失）
+docker-compose pull
+docker-compose up -d
+```
+
+### 备份与恢复
+
+**备份**：直接复制 `data/` 目录即可
+```bash
+cp -r ./data ./data-backup-$(date +%Y%m%d)
+```
+
+**恢复**：将备份的 `data/` 目录放回原位，重启容器即可。
 
 ---
 
@@ -708,6 +833,23 @@ nas-nav/
 
 ### Q: 如何查看当前版本号？
 **A:** 前台页脚和后台侧边栏底部都会显示版本号（如 `V1.0.0`），点击可跳转 GitHub 仓库。
+
+### Q: Docker 版和 Cloudflare 版有什么区别？
+**A:** 功能完全相同，区别在于部署方式：
+- **Cloudflare 版**：适合没有 NAS 的用户，免费托管，全球 CDN 加速，但需要 GitHub 账号和配置环境变量
+- **Docker 版**：适合有 NAS 的用户，纯本地运行，零配置，数据完全在自己手里，访问速度更快
+
+### Q: Docker 版忘记密码怎么办？
+**A:** 停止容器，编辑挂载目录下的 `data/data.json`，将 `settings.password` 改为 `admin123`，重启容器即可。
+
+### Q: Docker 版如何备份数据？
+**A:** 直接复制挂载的 `data/` 目录即可，包含 `data.json`（导航数据）和 `icons/`（图标文件）。恢复时将备份目录放回原位，重启容器。
+
+### Q: Docker 版支持 arm64 架构吗？
+**A:** 当前版本仅支持 amd64（x86_64）架构。如需 arm64 支持（如树莓派、ARM 版群晖），请在 GitHub 提 Issue。
+
+### Q: Docker 版可以使用 HTTPS 吗？
+**A:** 可以，在容器前加 Nginx 反向代理或使用群晖的反向代理功能，配置 SSL 证书即可。
 
 ---
 
