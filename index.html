@@ -769,6 +769,29 @@ body {
 </style>
 </head>
 <body>
+<script>
+// 立即根据 hash 和登录状态设置正确视图，避免先显示前台再切换到后台的闪烁
+(function() {
+  try {
+    var hash = location.hash || '#/';
+    var isAdmin = localStorage.getItem('nas_nav_admin_session') === '1';
+    var views = document.querySelectorAll('.view');
+    views.forEach(function(v) { v.classList.remove('active'); });
+    if (hash.startsWith('#/admin')) {
+      if (isAdmin) {
+        var adminView = document.getElementById('view-admin');
+        if (adminView) adminView.classList.add('active');
+      } else {
+        var loginView = document.getElementById('view-login');
+        if (loginView) loginView.classList.add('active');
+      }
+    } else {
+      var homeView = document.getElementById('view-home');
+      if (homeView) homeView.classList.add('active');
+    }
+  } catch(e) {}
+})();
+</script>
 
 <div id="bg-layer"></div>
 
