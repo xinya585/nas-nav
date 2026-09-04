@@ -395,6 +395,15 @@ Fork 完成后，点击下方按钮跳转到 Cloudflare Pages 创建页面：
 | 保存速度 | 调用 GitHub API（慢） | ✅ 写本地文件（快） |
 | 数据隐私 | 存在 GitHub | ✅ 完全本地 |
 
+> ⚠️ **重要说明：关于「已同步」状态**
+> 
+> Docker 版本中，后台显示的「已同步」是指**数据已保存到挂载目录的 `data.json` 文件**，并非同步到 GitHub。所有修改只会写入你本地 NAS 的 `./data/data.json`，**不会对任何 GitHub 仓库产生影响**。
+> 
+> - **Cloudflare 版**：「已同步」= 数据已写入 GitHub 仓库的 `data.json`
+> - **Docker 版**：「已同步」= 数据已写入本地挂载目录的 `data.json`
+> 
+> 两种版本的多设备同步原理相同：所有设备访问同一个服务地址，读取同一份数据文件，因此天然同步。
+
 ### 镜像信息
 
 - **Docker Hub**：https://hub.docker.com/r/xinya585/nas-nav
