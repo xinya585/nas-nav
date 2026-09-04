@@ -1739,23 +1739,60 @@ updateClock();
 async function fetchVisitorIP() {
   const ipEl = document.getElementById('ip-text');
   if (!ipEl) return;
-  try {
-    const resp = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
-    if (resp.ok) {
+
+  // 按优先级尝试多个 IP 接口
+  const providers = [
+    // 1. Cloudflare trace（站点托管在 CF 上，最可靠，返回文本格式）
+    async () => {
+      const resp = await fetch('https://www.cloudflare.com/cdn-cgi/trace');
+      if (!resp.ok) throw new Error('cf trace failed');
+      const text = await resp.text();
+      const match = text.match(/^ip=(.+)$/m);
+      if (match) return match[1];
+      throw new Error('cf trace no ip');
+    },
+    // 2. ip.sb（支持 CORS，返回 JSON）
+    async () => {
+      const resp = await fetch('https://api.ip.sb/jsonip');
+      if (!resp.ok) throw new Error('ip.sb failed');
       const json = await resp.json();
-      ipEl.textContent = json.ip;
-      return;
-    }
-  } catch (e) {}
-  // 备用：ipapi.co
-  try {
-    const resp = await fetch('https://ipapi.co/json/', { cache: 'no-store' });
-    if (resp.ok) {
+      return json.ip;
+    },
+    // 3. ipwho.is（支持 CORS，返回 JSON）
+    async () => {
+      const resp = await fetch('https://ipwho.is/');
+      if (!resp.ok) throw new Error('ipwho failed');
       const json = await resp.json();
-      ipEl.textContent = json.ip;
-      return;
+      if (json.success) return json.ip;
+      throw new Error('ipwho no success');
+    },
+    // 4. ipify.org（备用）
+    async () => {
+      const resp = await fetch('https://api.ipify.org?format=json');
+      if (!resp.ok) throw new Error('ipify failed');
+      const json = await resp.json();
+      return json.ip;
+    },
+    // 5. ipapi.co（备用）
+    async () => {
+      const resp = await fetch('https://ipapi.co/json/');
+      if (!resp.ok) throw new Error('ipapi failed');
+      const json = await resp.json();
+      return json.ip;
+    },
+  ];
+
+  for (const provider of providers) {
+    try {
+      const ip = await provider();
+      if (ip) {
+        ipEl.textContent = ip;
+        return;
+      }
+    } catch (e) {
+      // 继续尝试下一个
     }
-  } catch (e) {}
+  }
   ipEl.textContent = '未知';
 }
 fetchVisitorIP();
