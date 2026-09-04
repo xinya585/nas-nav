@@ -2395,26 +2395,50 @@ async function confirmIconSelection() {
   if (btn) {
     btn.textContent = '加载中...';
     btn.disabled = true;
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
   }
 
   try {
-    // 获取选中图标的 base64，保存到 data.json
-    const resp = await fetch('/api/icons?name=' + encodeURIComponent(selectedIcon.name));
+    // 带超时的 fetch（10秒）
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const resp = await fetch('/api/icons?name=' + encodeURIComponent(selectedIcon.name), {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
     const result = await resp.json();
     if (result.ok && result.dataUrl) {
       document.getElementById('link-icon-url').value = result.dataUrl;
       showIconPreview(result.dataUrl);
       closeModal('icon-picker-modal');
       toast('已选择图标：' + selectedIcon.name, 'success');
+      // 重置选中状态
+      selectedIcon = null;
     } else {
-      toast('获取图标失败', 'error');
+      toast('获取图标失败：' + (result.error || '未知错误'), 'error');
+      // 恢复按钮
+      if (btn) {
+        btn.textContent = '确认选择';
+        btn.disabled = false;
+        btn.style.opacity = '';
+        btn.style.cursor = '';
+      }
     }
   } catch (err) {
-    toast('获取图标失败：' + err.message, 'error');
-  } finally {
+    if (err.name === 'AbortError') {
+      toast('获取图标超时，请重试', 'error');
+    } else {
+      toast('获取图标失败：' + err.message, 'error');
+    }
+    // 恢复按钮
     if (btn) {
       btn.textContent = '确认选择';
-      updateConfirmButton();
+      btn.disabled = false;
+      btn.style.opacity = '';
+      btn.style.cursor = '';
     }
   }
 }
