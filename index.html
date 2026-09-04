@@ -844,6 +844,14 @@ body {
           if (hs && data.settings.heroSubtitle) hs.textContent = data.settings.heroSubtitle;
           if (st && data.settings.title) st.textContent = data.settings.title;
           if (data.settings.title) document.title = data.settings.title;
+          // 应用主题
+          var themeVars = {
+            green: {'--bg-primary':'#f2f6f4','--bg-secondary':'#ffffff','--bg-card':'#ffffff','--bg-card-hover':'#eef4f1','--border':'#dde5e0','--border-hover':'#b8cdc3','--text-primary':'#16251f','--text-secondary':'#4a6358','--text-muted':'#8aa397','--accent':'#059669','--accent-dim':'rgba(5,150,105,0.1)','--accent-glow':'rgba(5,150,105,0.2)'},
+            blue: {'--bg-primary':'#f0f5ff','--bg-secondary':'#ffffff','--bg-card':'#ffffff','--bg-card-hover':'#e8f0fe','--border':'#d6e0f0','--border-hover':'#a8c0e8','--text-primary':'#1a2540','--text-secondary':'#4a5a7a','--text-muted':'#8a9ab8','--accent':'#2563eb','--accent-dim':'rgba(37,99,235,0.1)','--accent-glow':'rgba(37,99,235,0.2)'},
+            white: {'--bg-primary':'#ffffff','--bg-secondary':'#fafafa','--bg-card':'#ffffff','--bg-card-hover':'#f5f5f5','--border':'#e5e5e5','--border-hover':'#cccccc','--text-primary':'#1a1a1a','--text-secondary':'#555555','--text-muted':'#999999','--accent':'#059669','--accent-dim':'rgba(5,150,105,0.08)','--accent-glow':'rgba(5,150,105,0.15)'}
+          };
+          var t = themeVars[data.settings.theme || 'green'] || themeVars.green;
+          for (var k in t) document.documentElement.style.setProperty(k, t[k]);
           // 应用背景
           var bg = document.getElementById('bg-layer');
           if (bg) {
@@ -1128,11 +1136,23 @@ body {
             </div>
           </div>
           <div style="border-top:1px solid var(--border); margin:20px 0; padding-top:20px;">
+            <h3 style="font-size:15px; margin-bottom:16px;">主题设置</h3>
+            <div class="form-group">
+              <label class="label">预设主题</label>
+              <select class="input" id="setting-theme" onchange="previewTheme()">
+                <option value="green">🌿 浅绿（默认）</option>
+                <option value="blue">💙 浅蓝</option>
+                <option value="white">⚪ 纯白</option>
+              </select>
+              <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">选择主题后立即预览，保存设置后生效</div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border); margin:20px 0; padding-top:20px;">
             <h3 style="font-size:15px; margin-bottom:16px;">背景设置</h3>
             <div class="form-group">
               <label class="label">背景类型</label>
               <select class="input" id="setting-bg-type" onchange="toggleBgSettings()">
-                <option value="none">默认（浅绿）</option>
+                <option value="none">跟随主题</option>
                 <option value="color">单色背景</option>
                 <option value="image">图片背景</option>
               </select>
@@ -1333,6 +1353,7 @@ const DEFAULT_DATA = {
     heroSubtitle: '快速访问所有自托管服务',
     footer: 'NAS Navigation · 部署于 Cloudflare Pages',
     icp: '',
+    theme: 'green',
     bgType: 'none',
     bgColor: '#f2f6f4',
     bgImage: '',
@@ -1688,7 +1709,8 @@ function renderHome() {
   if ($('hero-title')) $('hero-title').textContent = data.settings.heroTitle;
   if ($('hero-subtitle')) $('hero-subtitle').textContent = data.settings.heroSubtitle;
   if ($('footer-text')) $('footer-text').textContent = data.settings.footer;
-  // 应用背景设置
+  // 应用主题和背景设置
+  applyTheme();
   applyBackground();
   const icpEl = $('footer-icp');
   if (icpEl) {
@@ -1705,6 +1727,81 @@ function renderHome() {
   if ($('category-count')) $('category-count').textContent = data.categories.length + ' 分类';
   renderCategoryBar();
   renderGrid();
+}
+
+// 预设主题定义
+const THEMES = {
+  green: {
+    name: '浅绿',
+    vars: {
+      '--bg-primary': '#f2f6f4',
+      '--bg-secondary': '#ffffff',
+      '--bg-card': '#ffffff',
+      '--bg-card-hover': '#eef4f1',
+      '--border': '#dde5e0',
+      '--border-hover': '#b8cdc3',
+      '--text-primary': '#16251f',
+      '--text-secondary': '#4a6358',
+      '--text-muted': '#8aa397',
+      '--accent': '#059669',
+      '--accent-dim': 'rgba(5, 150, 105, 0.1)',
+      '--accent-glow': 'rgba(5, 150, 105, 0.2)'
+    }
+  },
+  blue: {
+    name: '浅蓝',
+    vars: {
+      '--bg-primary': '#f0f5ff',
+      '--bg-secondary': '#ffffff',
+      '--bg-card': '#ffffff',
+      '--bg-card-hover': '#e8f0fe',
+      '--border': '#d6e0f0',
+      '--border-hover': '#a8c0e8',
+      '--text-primary': '#1a2540',
+      '--text-secondary': '#4a5a7a',
+      '--text-muted': '#8a9ab8',
+      '--accent': '#2563eb',
+      '--accent-dim': 'rgba(37, 99, 235, 0.1)',
+      '--accent-glow': 'rgba(37, 99, 235, 0.2)'
+    }
+  },
+  white: {
+    name: '纯白',
+    vars: {
+      '--bg-primary': '#ffffff',
+      '--bg-secondary': '#fafafa',
+      '--bg-card': '#ffffff',
+      '--bg-card-hover': '#f5f5f5',
+      '--border': '#e5e5e5',
+      '--border-hover': '#cccccc',
+      '--text-primary': '#1a1a1a',
+      '--text-secondary': '#555555',
+      '--text-muted': '#999999',
+      '--accent': '#059669',
+      '--accent-dim': 'rgba(5, 150, 105, 0.08)',
+      '--accent-glow': 'rgba(5, 150, 105, 0.15)'
+    }
+  }
+};
+
+function applyTheme() {
+  if (!data || !data.settings) return;
+  const themeName = data.settings.theme || 'green';
+  const theme = THEMES[themeName] || THEMES.green;
+  
+  const root = document.documentElement;
+  for (const [key, value] of Object.entries(theme.vars)) {
+    root.style.setProperty(key, value);
+  }
+}
+
+function previewTheme() {
+  const themeName = document.getElementById('setting-theme').value;
+  const theme = THEMES[themeName] || THEMES.green;
+  const root = document.documentElement;
+  for (const [key, value] of Object.entries(theme.vars)) {
+    root.style.setProperty(key, value);
+  }
 }
 
 function applyBackground() {
@@ -2869,6 +2966,8 @@ function loadSettingsForm() {
   document.getElementById('setting-bg-image').value = data.settings.bgImage || '';
   document.getElementById('setting-bg-opacity').value = data.settings.bgOpacity != null ? data.settings.bgOpacity : 100;
   document.getElementById('bg-opacity-value').textContent = data.settings.bgOpacity != null ? data.settings.bgOpacity : 100;
+  // 主题设置
+  document.getElementById('setting-theme').value = data.settings.theme || 'green';
   toggleBgSettings();
 }
 
@@ -2879,6 +2978,8 @@ async function saveSettings() {
   data.settings.footer = document.getElementById('setting-footer').value.trim() || '';
   data.settings.icp = document.getElementById('setting-icp').value.trim() || '';
   data.settings.logoUrl = document.getElementById('setting-logo-url').value.trim();
+  // 主题设置
+  data.settings.theme = document.getElementById('setting-theme').value;
   // 背景设置
   data.settings.bgType = document.getElementById('setting-bg-type').value;
   data.settings.bgColor = document.getElementById('setting-bg-color').value;
