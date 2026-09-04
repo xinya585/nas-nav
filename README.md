@@ -62,6 +62,7 @@
 - ⚙️ **站点设置** — 自定义标题、副标题、页脚、背景、Logo、备案号等
 - 💾 **数据导入导出** — 一键备份与恢复（JSON 格式）
 - 🖼️ **图标上传** — 支持本地上传图标，自动压缩到 128×128 并保存
+- 📚 **从库选择图标** — 内置图标库选择器，支持搜索、预览、一键选择，图标以 base64 内嵌保存
 - 🏠 **返回首页** — 后台侧边栏一键返回首页，新标签页打开不影响后台
 - 🔗 **GitHub 配置** — 可手动配置 Token，用于图标上传等高级功能
 
@@ -289,11 +290,13 @@ nas-nav/
 ├── functions/                  # Cloudflare Pages Functions（服务端代码）
 │   └── api/
 │       ├── data.js             # 数据代理端点（GET 读取 / PUT 写入 /api/data）
+│       ├── icons.js            # 图标代理端点（列表 / base64 / 图片直连 /api/icons）
 │       ├── device-code.js      # GitHub Device Flow 代理（可选，用于获取 Token）
 │       └── access-token.js     # GitHub Access Token 代理（可选）
 ├── .github/
 │   └── workflows/
-│       └── cleanup-deployments.yml  # 自动清理 Cloudflare Pages 旧部署
+│       ├── cleanup-deployments.yml    # 自动清理 Cloudflare Pages 旧部署
+│       └── sync-from-upstream.yml     # 自动同步上游代码（可选）
 ├── icons/                      # 用户上传的图标（自动生成，base64 内嵌在 data.json 中）
 ├── screenshots/                # README 预览截图
 │   ├── home.png
