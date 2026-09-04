@@ -2319,12 +2319,25 @@ function renderIconGrid(files) {
   let html = '';
   files.forEach((f, idx) => {
     const imgUrl = '/api/icons?type=image&name=' + encodeURIComponent(f.name);
-    html += '<div class="icon-picker-item" data-name="' + escapeAttr(f.name) + '" title="' + escapeAttr(f.name) + '" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border:2px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;" onclick="selectIconForPicker(\'' + escapeAttr(f.name) + '\', this)">'
+    html += '<div class="icon-picker-item" data-name="' + escapeAttr(f.name) + '" title="' + escapeAttr(f.name) + '" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border:2px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;" onclick="selectIconForPicker(\'' + escapeAttr(f.name) + '\', this)">'
+      + '<button type="button" class="icon-delete-btn" onclick="event.stopPropagation();deleteIconFromRepo(\'' + escapeAttr(f.name) + '\')" style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:white;border:none;font-size:12px;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;z-index:10;" onmouseover="this.style.background=\'#dc2626\'" onmouseout="this.style.background=\'#ef4444\'">×</button>'
       + '<img src="' + imgUrl + '" alt="' + escapeAttr(f.name) + '" loading="lazy" style="width:48px;height:48px;object-fit:contain;background:var(--bg-hover);border-radius:6px;" onerror="this.style.opacity=0.3">'
       + '<span style="font-size:10px;color:var(--text-muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(f.name.substring(0, 12)) + '</span>'
       + '</div>';
   });
   gridEl.innerHTML = html;
+
+  // 悬停显示删除按钮
+  gridEl.querySelectorAll('.icon-picker-item').forEach(item => {
+    item.addEventListener('mouseenter', () => {
+      const btn = item.querySelector('.icon-delete-btn');
+      if (btn) btn.style.display = 'flex';
+    });
+    item.addEventListener('mouseleave', () => {
+      const btn = item.querySelector('.icon-delete-btn');
+      if (btn) btn.style.display = 'none';
+    });
+  });
 }
 
 function filterIconPicker(keyword) {
@@ -2440,6 +2453,37 @@ async function confirmIconSelection() {
       btn.style.opacity = '';
       btn.style.cursor = '';
     }
+  }
+}
+
+async function deleteIconFromRepo(name) {
+  if (!confirm('确定要删除图标 "' + name + '" 吗？此操作不可恢复。')) {
+    return;
+  }
+
+  try {
+    const resp = await fetch('/api/icons?name=' + encodeURIComponent(name), {
+      method: 'DELETE'
+    });
+    const result = await resp.json();
+
+    if (result.ok) {
+      toast('图标已删除：' + name, 'success');
+      // 从列表中移除
+      allIconFiles = allIconFiles.filter(f => f.name !== name);
+      // 如果删除的是当前选中的图标，清除选中
+      if (selectedIcon && selectedIcon.name === name) {
+        selectedIcon = null;
+        updateConfirmButton();
+      }
+      // 重新渲染
+      const searchInput = document.getElementById('icon-picker-search');
+      filterIconPicker(searchInput ? searchInput.value : '');
+    } else {
+      toast('删除失败：' + (result.error || '未知错误'), 'error');
+    }
+  } catch (err) {
+    toast('删除失败：' + err.message, 'error');
   }
 }
 
