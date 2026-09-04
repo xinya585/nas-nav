@@ -78,6 +78,7 @@ export async function onRequest(context) {
     } else {
       // 获取单个图标内容
       const decodedName = decodeURIComponent(iconName);
+      const returnType = url.searchParams.get('type') || 'base64';
       const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${iconsPath}/${decodedName}?ref=${branch}`;
       const resp = await fetch(apiUrl, {
         headers: {
@@ -95,14 +96,43 @@ export async function onRequest(context) {
       }
 
       const data = await resp.json();
-      
+      const ext = decodedName.split('.').pop().toLowerCase();
+      const mime = ext === 'svg' ? 'image/svg+xml'
+        : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg'
+        : ext === 'gif' ? 'image/gif'
+        : ext === 'webp' ? 'image/webp'
+        : 'image/png';
+
+      // 如果请求 type=image，直接返回图片二进制内容（浏览器可缓存，加载快）
+      if (returnType === 'image') {
+        let imageBuffer = null;
+        if (data.content) {
+          imageBuffer = Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0));
+        } else if (data.download_url) {
+          const fileResp = await fetch(data.download_url);
+          if (!fileResp.ok) {
+            return new Response(JSON.stringify({ ok: false, error: 'Failed to download' }), { status: 500 });
+          }
+          imageBuffer = new Uint8Array(await fileResp.arrayBuffer());
+        }
+        if (imageBuffer) {
+          return new Response(imageBuffer, {
+            status: 200,
+            headers: {
+              'Content-Type': mime,
+              'Cache-Control': 'public, max-age=86400',
+              'Access-Control-Allow-Origin': '*',
+            },
+          });
+        }
+        return new Response('Not found', { status: 404 });
+      }
+
+      // 默认返回 base64 JSON
       let base64Content = null;
-      
       if (data.content) {
-        // 小文件：直接返回 base64 content
         base64Content = data.content.replace(/\n/g, '');
       } else if (data.download_url) {
-        // 大文件：通过 download_url 下载
         const fileResp = await fetch(data.download_url);
         if (!fileResp.ok) {
           return new Response(JSON.stringify({ ok: false, error: `Failed to download icon: ${fileResp.status}` }), {
@@ -123,13 +153,6 @@ export async function onRequest(context) {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-
-      const ext = decodedName.split('.').pop().toLowerCase();
-      const mime = ext === 'svg' ? 'image/svg+xml'
-        : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg'
-        : ext === 'gif' ? 'image/gif'
-        : ext === 'webp' ? 'image/webp'
-        : 'image/png';
 
       const dataUrl = `data:${mime};base64,${base64Content}`;
 
