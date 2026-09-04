@@ -1436,21 +1436,25 @@ function loadLocalData() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed.settings && parsed.categories && parsed.links) return parsed;
+      if (parsed.settings && parsed.categories && parsed.links) {
+        // 恢复 fileSha
+        if (parsed._fileSha) fileSha = parsed._fileSha;
+        return parsed;
+      }
     }
   } catch(e) {}
   return JSON.parse(JSON.stringify(DEFAULT_DATA));
 }
 
 function saveLocalData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  const toSave = JSON.parse(JSON.stringify(data));
+  toSave._fileSha = fileSha;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
 }
 
 async function syncToGithub() {
-  if (!isGhConfigured()) {
-    saveLocalData();
-    return;
-  }
+  // 优先保存本地数据，确保刷新时能立即显示
+  saveLocalData();
   setSyncState('syncing');
   const result = await pushDataToGithub(data);
   if (result.ok) {
@@ -1458,9 +1462,14 @@ async function syncToGithub() {
     setSyncState('synced');
     toast('已同步到 GitHub', 'success');
   } else {
-    saveLocalData(); // 即使 GitHub 失败也保存本地
-    setSyncState('error');
-    toast('GitHub 同步失败：' + (result.message || result.reason), 'error');
+    // 即使 GitHub 失败也保存本地，下次刷新仍能看到数据
+    saveLocalData();
+    if (result.reason === 'not_configured') {
+      setSyncState('local');
+    } else {
+      setSyncState('error');
+      toast('GitHub 同步失败：' + (result.message || result.reason), 'error');
+    }
   }
 }
 
@@ -1510,11 +1519,7 @@ async function initData() {
     pushDataToGithub(data).catch(() => {});
   } else {
     // 加载失败，继续使用本地缓存
-    if (isGhConfigured()) {
-      setSyncState('error');
-    } else {
-      setSyncState('local');
-    }
+    setSyncState('local');
   }
 }
 
