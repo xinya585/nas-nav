@@ -848,7 +848,8 @@ body {
           var themeVars = {
             green: {'--bg-primary':'#f2f6f4','--bg-secondary':'#ffffff','--bg-card':'#ffffff','--bg-card-hover':'#eef4f1','--border':'#dde5e0','--border-hover':'#b8cdc3','--text-primary':'#16251f','--text-secondary':'#4a6358','--text-muted':'#8aa397','--accent':'#059669','--accent-dim':'rgba(5,150,105,0.1)','--accent-glow':'rgba(5,150,105,0.2)'},
             blue: {'--bg-primary':'#f0f5ff','--bg-secondary':'#ffffff','--bg-card':'#ffffff','--bg-card-hover':'#e8f0fe','--border':'#d6e0f0','--border-hover':'#a8c0e8','--text-primary':'#1a2540','--text-secondary':'#4a5a7a','--text-muted':'#8a9ab8','--accent':'#2563eb','--accent-dim':'rgba(37,99,235,0.1)','--accent-glow':'rgba(37,99,235,0.2)'},
-            white: {'--bg-primary':'#ffffff','--bg-secondary':'#fafafa','--bg-card':'#ffffff','--bg-card-hover':'#f5f5f5','--border':'#e5e5e5','--border-hover':'#cccccc','--text-primary':'#1a1a1a','--text-secondary':'#555555','--text-muted':'#999999','--accent':'#059669','--accent-dim':'rgba(5,150,105,0.08)','--accent-glow':'rgba(5,150,105,0.15)'}
+            white: {'--bg-primary':'#ffffff','--bg-secondary':'#fafafa','--bg-card':'#ffffff','--bg-card-hover':'#f5f5f5','--border':'#e5e5e5','--border-hover':'#cccccc','--text-primary':'#1a1a1a','--text-secondary':'#555555','--text-muted':'#999999','--accent':'#059669','--accent-dim':'rgba(5,150,105,0.08)','--accent-glow':'rgba(5,150,105,0.15)'},
+            pink: {'--bg-primary':'#fdf2f8','--bg-secondary':'#ffffff','--bg-card':'#ffffff','--bg-card-hover':'#fce7f3','--border':'#fbcfe8','--border-hover':'#f9a8d4','--text-primary':'#4a1942','--text-secondary':'#831843','--text-muted':'#be185d','--accent':'#ec4899','--accent-dim':'rgba(236,72,153,0.1)','--accent-glow':'rgba(236,72,153,0.2)'}
           };
           var t = themeVars[data.settings.theme || 'green'] || themeVars.green;
           for (var k in t) document.documentElement.style.setProperty(k, t[k]);
@@ -1156,6 +1157,7 @@ body {
                 <option value="green">🌿 浅绿（默认）</option>
                 <option value="blue">💙 浅蓝</option>
                 <option value="white">⚪ 纯白</option>
+                <option value="pink">🌸 浅粉</option>
               </select>
               <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">选择主题后立即预览，保存设置后生效</div>
             </div>
@@ -1797,6 +1799,23 @@ const THEMES = {
       '--accent': '#059669',
       '--accent-dim': 'rgba(5, 150, 105, 0.08)',
       '--accent-glow': 'rgba(5, 150, 105, 0.15)'
+    }
+  },
+  pink: {
+    name: '浅粉',
+    vars: {
+      '--bg-primary': '#fdf2f8',
+      '--bg-secondary': '#ffffff',
+      '--bg-card': '#ffffff',
+      '--bg-card-hover': '#fce7f3',
+      '--border': '#fbcfe8',
+      '--border-hover': '#f9a8d4',
+      '--text-primary': '#4a1942',
+      '--text-secondary': '#831843',
+      '--text-muted': '#be185d',
+      '--accent': '#ec4899',
+      '--accent-dim': 'rgba(236, 72, 153, 0.1)',
+      '--accent-glow': 'rgba(236, 72, 153, 0.2)'
     }
   }
 };
