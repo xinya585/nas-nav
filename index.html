@@ -1229,11 +1229,19 @@ body {
       </button>
     </div>
     <div class="modal-body">
+      <div style="margin-bottom:12px;">
+        <input type="text" class="input" id="icon-picker-search" placeholder="搜索图标名称..." oninput="filterIconPicker(this.value)" style="width:100%;">
+      </div>
       <div id="icon-picker-status" style="text-align:center;padding:20px;color:var(--text-muted);font-size:14px;">正在加载图标库...</div>
-      <div id="icon-picker-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:12px;max-height:400px;overflow-y:auto;"></div>
+      <div id="icon-picker-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:12px;max-height:350px;overflow-y:auto;"></div>
+      <div id="icon-picker-selected" style="margin-top:12px;padding:10px;background:var(--accent-light);border-radius:8px;display:none;align-items:center;gap:10px;">
+        <img id="icon-picker-selected-img" style="width:32px;height:32px;border-radius:4px;">
+        <span id="icon-picker-selected-name" style="font-size:13px;font-weight:500;"></span>
+      </div>
     </div>
     <div class="modal-footer">
-      <button class="btn" onclick="closeModal('icon-picker-modal')">关闭</button>
+      <button class="btn" onclick="closeModal('icon-picker-modal')">取消</button>
+      <button class="btn btn-primary" id="icon-picker-confirm" onclick="confirmIconSelection()" disabled style="opacity:0.5;cursor:not-allowed;">确认选择</button>
     </div>
   </div>
 </div>
@@ -2361,12 +2369,32 @@ function openIconPicker() {
   document.getElementById('icon-picker-status').style.display = 'block';
   document.getElementById('icon-picker-status').textContent = '正在加载图标库...';
   document.getElementById('icon-picker-grid').innerHTML = '';
+  // 重置选中状态
+  selectedIcon = null;
+  const selectedWrap = document.getElementById('icon-picker-selected');
+  if (selectedWrap) selectedWrap.style.display = 'none';
+  const confirmBtn = document.getElementById('icon-picker-confirm');
+  if (confirmBtn) {
+    confirmBtn.textContent = '确认选择';
+    confirmBtn.disabled = true;
+    confirmBtn.style.opacity = '0.5';
+    confirmBtn.style.cursor = 'not-allowed';
+  }
   loadIconsFromRepo();
 }
+
+let allIconFiles = [];
+let selectedIcon = null;
 
 async function loadIconsFromRepo() {
   const statusEl = document.getElementById('icon-picker-status');
   const gridEl = document.getElementById('icon-picker-grid');
+  const searchEl = document.getElementById('icon-picker-search');
+
+  // 重置状态
+  selectedIcon = null;
+  updateConfirmButton();
+  if (searchEl) searchEl.value = '';
 
   try {
     // 通过后端代理获取图标列表
@@ -2381,44 +2409,124 @@ async function loadIconsFromRepo() {
       return;
     }
 
-    const imageFiles = result.files;
+    allIconFiles = result.files;
     statusEl.style.display = 'none';
 
-    // 创建网格
-    let html = '';
-    imageFiles.forEach((f, idx) => {
-      html += '<div class="icon-picker-item" data-idx="' + idx + '" data-name="' + escapeAttr(f.name) + '" title="' + escapeAttr(f.name) + '" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor=\'var(--accent)\';this.style.background=\'var(--bg-hover)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'transparent\'">'
-        + '<img data-idx="' + idx + '" alt="' + escapeAttr(f.name) + '" style="width:48px;height:48px;object-fit:contain;background:var(--bg-hover);border-radius:6px;">'
-        + '<span style="font-size:10px;color:var(--text-muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(f.name.substring(0, 12)) + '</span>'
-        + '</div>';
-    });
-    gridEl.innerHTML = html;
-
-    // 异步加载每个图标
-    const loadPromises = imageFiles.map((f, idx) => {
-      return fetch('/api/icons?name=' + encodeURIComponent(f.name))
-        .then(r => r.json())
-        .then(data => {
-          if (data.ok && data.dataUrl) {
-            const img = gridEl.querySelector('img[data-idx="' + idx + '"]');
-            if (img) img.src = data.dataUrl;
-            const item = gridEl.querySelector('.icon-picker-item[data-idx="' + idx + '"]');
-            if (item) item.dataset.dataUrl = data.dataUrl;
-          }
-        }).catch(() => {});
-    });
-    await Promise.all(loadPromises);
-
-    // 绑定点击事件
-    gridEl.querySelectorAll('.icon-picker-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const dataUrl = item.dataset.dataUrl;
-        const name = item.dataset.name;
-        if (dataUrl) selectRepoIcon(dataUrl, name);
-      });
-    });
+    // 渲染图标网格（用图片直连 URL，浏览器自动加载和缓存）
+    renderIconGrid(allIconFiles);
   } catch (err) {
     statusEl.textContent = '加载失败：' + err.message;
+  }
+}
+
+function renderIconGrid(files) {
+  const gridEl = document.getElementById('icon-picker-grid');
+
+  if (files.length === 0) {
+    gridEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--text-muted);">没有匹配的图标</div>';
+    return;
+  }
+
+  let html = '';
+  files.forEach((f, idx) => {
+    const imgUrl = '/api/icons?type=image&name=' + encodeURIComponent(f.name);
+    html += '<div class="icon-picker-item" data-name="' + escapeAttr(f.name) + '" title="' + escapeAttr(f.name) + '" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border:2px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;" onclick="selectIconForPicker(\'' + escapeAttr(f.name) + '\', this)">'
+      + '<img src="' + imgUrl + '" alt="' + escapeAttr(f.name) + '" loading="lazy" style="width:48px;height:48px;object-fit:contain;background:var(--bg-hover);border-radius:6px;" onerror="this.style.opacity=0.3">'
+      + '<span style="font-size:10px;color:var(--text-muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(f.name.substring(0, 12)) + '</span>'
+      + '</div>';
+  });
+  gridEl.innerHTML = html;
+}
+
+function filterIconPicker(keyword) {
+  if (!keyword || keyword.trim() === '') {
+    renderIconGrid(allIconFiles);
+  } else {
+    const kw = keyword.toLowerCase();
+    const filtered = allIconFiles.filter(f => f.name.toLowerCase().includes(kw));
+    renderIconGrid(filtered);
+  }
+  // 恢复选中状态
+  if (selectedIcon) {
+    const item = document.querySelector('.icon-picker-item[data-name="' + CSS.escape(selectedIcon.name) + '"]');
+    if (item) {
+      item.style.borderColor = 'var(--accent)';
+      item.style.background = 'var(--accent-light)';
+    }
+  }
+}
+
+function selectIconForPicker(name, element) {
+  // 清除之前的选中
+  document.querySelectorAll('.icon-picker-item').forEach(item => {
+    item.style.borderColor = 'var(--border)';
+    item.style.background = 'transparent';
+  });
+
+  // 高亮当前选中
+  element.style.borderColor = 'var(--accent)';
+  element.style.background = 'var(--accent-light)';
+
+  // 记录选中
+  const img = element.querySelector('img');
+  selectedIcon = { name: name, imgUrl: img ? img.src : null };
+
+  // 显示选中信息
+  const selectedWrap = document.getElementById('icon-picker-selected');
+  const selectedImg = document.getElementById('icon-picker-selected-img');
+  const selectedName = document.getElementById('icon-picker-selected-name');
+  if (selectedWrap && selectedImg && selectedName) {
+    selectedWrap.style.display = 'flex';
+    selectedImg.src = img ? img.src : '';
+    selectedName.textContent = name;
+  }
+
+  updateConfirmButton();
+}
+
+function updateConfirmButton() {
+  const btn = document.getElementById('icon-picker-confirm');
+  if (btn) {
+    if (selectedIcon) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+    } else {
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      btn.style.cursor = 'not-allowed';
+    }
+  }
+}
+
+async function confirmIconSelection() {
+  if (!selectedIcon) return;
+
+  const btn = document.getElementById('icon-picker-confirm');
+  if (btn) {
+    btn.textContent = '加载中...';
+    btn.disabled = true;
+  }
+
+  try {
+    // 获取选中图标的 base64，保存到 data.json
+    const resp = await fetch('/api/icons?name=' + encodeURIComponent(selectedIcon.name));
+    const result = await resp.json();
+    if (result.ok && result.dataUrl) {
+      document.getElementById('link-icon-url').value = result.dataUrl;
+      showIconPreview(result.dataUrl);
+      closeModal('icon-picker-modal');
+      toast('已选择图标：' + selectedIcon.name, 'success');
+    } else {
+      toast('获取图标失败', 'error');
+    }
+  } catch (err) {
+    toast('获取图标失败：' + err.message, 'error');
+  } finally {
+    if (btn) {
+      btn.textContent = '确认选择';
+      updateConfirmButton();
+    }
   }
 }
 
