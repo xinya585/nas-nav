@@ -871,6 +871,23 @@ body {
             var logos = document.querySelectorAll('.logo-img');
             for (var i = 0; i < logos.length; i++) logos[i].src = data.settings.logo;
           }
+          // 应用字体设置
+          var typoGroups = [
+            { font: data.settings.titleFont, size: data.settings.titleSize, color: data.settings.titleColor, sels: ['#site-title', '#hero-title'] },
+            { font: data.settings.subtitleFont, size: data.settings.subtitleSize, color: data.settings.subtitleColor, sels: ['#hero-subtitle'] },
+            { font: data.settings.footerFont, size: data.settings.footerSize, color: data.settings.footerColor, sels: ['#footer-text', '#footer-icp'] }
+          ];
+          for (var gi = 0; gi < typoGroups.length; gi++) {
+            var g = typoGroups[gi];
+            for (var si = 0; si < g.sels.length; si++) {
+              var el = document.querySelector(g.sels[si]);
+              if (el) {
+                if (g.font) el.style.fontFamily = g.font;
+                if (g.size) el.style.fontSize = g.size + 'px';
+                if (g.color) el.style.color = g.color;
+              }
+            }
+          }
           // 备案号
           if (data.settings.icp) {
             var icp = document.getElementById('footer-icp');
@@ -1192,6 +1209,119 @@ body {
               <input type="range" id="setting-bg-opacity" min="10" max="100" value="100" style="width:100%;" oninput="document.getElementById('bg-opacity-value').textContent=this.value">
             </div>
           </div>
+          <div style="border-top:1px solid var(--border); margin:20px 0; padding-top:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <h3 style="font-size:15px; margin:0;">字体设置</h3>
+              <button type="button" class="btn btn-sm" onclick="resetTypography()">恢复默认</button>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">留空表示使用主题默认样式。分组设置：标题组（站点标题+首页大标题）、副标题组、页脚组（页脚文字+备案号）。</p>
+            
+            <div style="padding:12px; background:var(--bg-secondary); border-radius:8px; margin-bottom:12px;">
+              <div style="font-weight:600; font-size:13px; margin-bottom:10px; color:var(--text-primary);">标题组（站点标题 + 首页大标题）</div>
+              <div style="display:grid; grid-template-columns:1fr 80px 100px; gap:8px; align-items:end;">
+                <div class="form-group" style="margin:0;">
+                  <label class="label" style="font-size:11px;">字体</label>
+                  <select class="input" id="setting-title-font" onchange="previewTypography()">
+                    <option value="">跟随主题</option>
+                    <option value="'Noto Sans SC', sans-serif">思源黑体</option>
+                    <option value="'Microsoft YaHei', sans-serif">微软雅黑</option>
+                    <option value="'PingFang SC', sans-serif">苹方</option>
+                    <option value="SimSun, serif">宋体</option>
+                    <option value="KaiTi, serif">楷体</option>
+                    <option value="Arial, sans-serif">Arial</option>
+                    <option value="Georgia, serif">Georgia</option>
+                    <option value="'Courier New', monospace">等宽字体</option>
+                    <option value="__custom__">自定义...</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="label" style="font-size:11px;">字号(px)</label>
+                  <input type="number" class="input" id="setting-title-size" min="12" max="72" placeholder="默认" oninput="previewTypography()">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="label" style="font-size:11px;">颜色</label>
+                  <div style="display:flex; gap:4px;">
+                    <input type="color" id="setting-title-color" value="#16251f" style="width:36px; height:38px; border:1px solid var(--border); border-radius:6px; cursor:pointer; padding:2px;" oninput="previewTypography()">
+                    <button type="button" class="btn btn-sm" style="padding:0 6px;" onclick="document.getElementById('setting-title-color').value='';document.getElementById('setting-title-color-text').value='';previewTypography()" title="清除颜色">×</button>
+                  </div>
+                  <input type="hidden" id="setting-title-color-text">
+                </div>
+              </div>
+              <div id="title-custom-font-group" style="display:none; margin-top:8px;">
+                <input type="text" class="input" id="setting-title-font-custom" placeholder="输入自定义字体名，如 'MyFont', sans-serif" oninput="previewTypography()">
+              </div>
+            </div>
+
+            <div style="padding:12px; background:var(--bg-secondary); border-radius:8px; margin-bottom:12px;">
+              <div style="font-weight:600; font-size:13px; margin-bottom:10px; color:var(--text-primary);">副标题组（首页副标题）</div>
+              <div style="display:grid; grid-template-columns:1fr 80px 100px; gap:8px; align-items:end;">
+                <div class="form-group" style="margin:0;">
+                  <label class="label" style="font-size:11px;">字体</label>
+                  <select class="input" id="setting-subtitle-font" onchange="previewTypography()">
+                    <option value="">跟随主题</option>
+                    <option value="'Noto Sans SC', sans-serif">思源黑体</option>
+                    <option value="'Microsoft YaHei', sans-serif">微软雅黑</option>
+                    <option value="'PingFang SC', sans-serif">苹方</option>
+                    <option value="SimSun, serif">宋体</option>
+                    <option value="KaiTi, serif">楷体</option>
+                    <option value="Arial, sans-serif">Arial</option>
+                    <option value="Georgia, serif">Georgia</option>
+                    <option value="'Courier New', monospace">等宽字体</option>
+                    <option value="__custom__">自定义...</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="label" style="font-size:11px;">字号(px)</label>
+                  <input type="number" class="input" id="setting-subtitle-size" min="10" max="48" placeholder="默认" oninput="previewTypography()">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="label" style="font-size:11px;">颜色</label>
+                  <div style="display:flex; gap:4px;">
+                    <input type="color" id="setting-subtitle-color" value="#4a6358" style="width:36px; height:38px; border:1px solid var(--border); border-radius:6px; cursor:pointer; padding:2px;" oninput="previewTypography()">
+                    <button type="button" class="btn btn-sm" style="padding:0 6px;" onclick="document.getElementById('setting-subtitle-color').value='';previewTypography()" title="清除颜色">×</button>
+                  </div>
+                </div>
+              </div>
+              <div id="subtitle-custom-font-group" style="display:none; margin-top:8px;">
+                <input type="text" class="input" id="setting-subtitle-font-custom" placeholder="输入自定义字体名" oninput="previewTypography()">
+              </div>
+            </div>
+
+            <div style="padding:12px; background:var(--bg-secondary); border-radius:8px;">
+              <div style="font-weight:600; font-size:13px; margin-bottom:10px; color:var(--text-primary);">页脚组（页脚文字 + 备案号）</div>
+              <div style="display:grid; grid-template-columns:1fr 80px 100px; gap:8px; align-items:end;">
+                <div class="form-group" style="margin:0;">
+                  <label class="label" style="font-size:11px;">字体</label>
+                  <select class="input" id="setting-footer-font" onchange="previewTypography()">
+                    <option value="">跟随主题</option>
+                    <option value="'Noto Sans SC', sans-serif">思源黑体</option>
+                    <option value="'Microsoft YaHei', sans-serif">微软雅黑</option>
+                    <option value="'PingFang SC', sans-serif">苹方</option>
+                    <option value="SimSun, serif">宋体</option>
+                    <option value="KaiTi, serif">楷体</option>
+                    <option value="Arial, sans-serif">Arial</option>
+                    <option value="Georgia, serif">Georgia</option>
+                    <option value="'Courier New', monospace">等宽字体</option>
+                    <option value="__custom__">自定义...</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="label" style="font-size:11px;">字号(px)</label>
+                  <input type="number" class="input" id="setting-footer-size" min="10" max="32" placeholder="默认" oninput="previewTypography()">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="label" style="font-size:11px;">颜色</label>
+                  <div style="display:flex; gap:4px;">
+                    <input type="color" id="setting-footer-color" value="#8aa397" style="width:36px; height:38px; border:1px solid var(--border); border-radius:6px; cursor:pointer; padding:2px;" oninput="previewTypography()">
+                    <button type="button" class="btn btn-sm" style="padding:0 6px;" onclick="document.getElementById('setting-footer-color').value='';previewTypography()" title="清除颜色">×</button>
+                  </div>
+                </div>
+              </div>
+              <div id="footer-custom-font-group" style="display:none; margin-top:8px;">
+                <input type="text" class="input" id="setting-footer-font-custom" placeholder="输入自定义字体名" oninput="previewTypography()">
+              </div>
+            </div>
+          </div>
           <div class="form-group">
             <label class="label">修改管理员密码（留空则不修改）</label>
             <input type="password" class="input" id="setting-password" placeholder="输入新密码">
@@ -1375,7 +1505,16 @@ const DEFAULT_DATA = {
     bgImage: '',
     bgOpacity: 100,
     logoUrl: '',
-    password: 'admin123'
+    password: 'admin123',
+    titleFont: '',
+    titleSize: '',
+    titleColor: '',
+    subtitleFont: '',
+    subtitleSize: '',
+    subtitleColor: '',
+    footerFont: '',
+    footerSize: '',
+    footerColor: ''
   },
   categories: [
     { id: 'c1', name: '常用', sort: 0 },
@@ -1728,6 +1867,7 @@ function renderHome() {
   // 应用主题和背景设置
   applyTheme();
   applyBackground();
+  applyTypography();
   // 更新版本号
   if ($('footer-version')) $('footer-version').textContent = 'V' + APP_VERSION;
   if ($('admin-version')) $('admin-version').textContent = APP_VERSION;
@@ -1838,6 +1978,89 @@ function previewTheme() {
   for (const [key, value] of Object.entries(theme.vars)) {
     root.style.setProperty(key, value);
   }
+}
+
+function getFontFamily(group) {
+  const select = document.getElementById('setting-' + group + '-font');
+  if (!select) return '';
+  const val = select.value;
+  if (val === '__custom__') {
+    const custom = document.getElementById('setting-' + group + '-font-custom');
+    return custom ? custom.value.trim() : '';
+  }
+  return val;
+}
+
+function applyTypography() {
+  if (!data || !data.settings) return;
+  const s = data.settings;
+  
+  const groups = {
+    title: { font: s.titleFont, size: s.titleSize, color: s.titleColor, selectors: ['#site-title', '#hero-title'] },
+    subtitle: { font: s.subtitleFont, size: s.subtitleSize, color: s.subtitleColor, selectors: ['#hero-subtitle'] },
+    footer: { font: s.footerFont, size: s.footerSize, color: s.footerColor, selectors: ['#footer-text', '#footer-icp'] }
+  };
+  
+  for (const [group, cfg] of Object.entries(groups)) {
+    for (const sel of cfg.selectors) {
+      const el = document.querySelector(sel);
+      if (!el) continue;
+      el.style.fontFamily = cfg.font || '';
+      el.style.fontSize = cfg.size ? cfg.size + 'px' : '';
+      el.style.color = cfg.color || '';
+    }
+  }
+}
+
+function previewTypography() {
+  const groups = ['title', 'subtitle', 'footer'];
+  for (const group of groups) {
+    const customGroup = document.getElementById(group + '-custom-font-group');
+    const select = document.getElementById('setting-' + group + '-font');
+    if (customGroup && select) {
+      customGroup.style.display = select.value === '__custom__' ? 'block' : 'none';
+    }
+  }
+  
+  const tempSettings = {
+    titleFont: getFontFamily('title'),
+    titleSize: document.getElementById('setting-title-size').value,
+    titleColor: document.getElementById('setting-title-color').value,
+    subtitleFont: getFontFamily('subtitle'),
+    subtitleSize: document.getElementById('setting-subtitle-size').value,
+    subtitleColor: document.getElementById('setting-subtitle-color').value,
+    footerFont: getFontFamily('footer'),
+    footerSize: document.getElementById('setting-footer-size').value,
+    footerColor: document.getElementById('setting-footer-color').value
+  };
+  
+  const oldSettings = data.settings;
+  data.settings = Object.assign({}, oldSettings, tempSettings);
+  applyTypography();
+  data.settings = oldSettings;
+}
+
+function resetTypography() {
+  if (!confirm('确定要恢复默认字体设置吗？所有自定义字体、字号、颜色将被清除。')) return;
+  const fields = ['titleFont', 'titleSize', 'titleColor', 'subtitleFont', 'subtitleSize', 'subtitleColor', 'footerFont', 'footerSize', 'footerColor'];
+  for (const f of fields) {
+    data.settings[f] = '';
+  }
+  document.getElementById('setting-title-font').value = '';
+  document.getElementById('setting-title-size').value = '';
+  document.getElementById('setting-title-color').value = '#16251f';
+  document.getElementById('setting-subtitle-font').value = '';
+  document.getElementById('setting-subtitle-size').value = '';
+  document.getElementById('setting-subtitle-color').value = '#4a6358';
+  document.getElementById('setting-footer-font').value = '';
+  document.getElementById('setting-footer-size').value = '';
+  document.getElementById('setting-footer-color').value = '#8aa397';
+  ['title', 'subtitle', 'footer'].forEach(g => {
+    const cg = document.getElementById(g + '-custom-font-group');
+    if (cg) cg.style.display = 'none';
+  });
+  applyTypography();
+  saveSettings();
 }
 
 function applyBackground() {
@@ -3004,6 +3227,30 @@ function loadSettingsForm() {
   document.getElementById('bg-opacity-value').textContent = data.settings.bgOpacity != null ? data.settings.bgOpacity : 100;
   // 主题设置
   document.getElementById('setting-theme').value = data.settings.theme || 'green';
+  // 字体设置
+  const fontGroups = ['title', 'subtitle', 'footer'];
+  for (const group of fontGroups) {
+    const fontVal = data.settings[group + 'Font'] || '';
+    const select = document.getElementById('setting-' + group + '-font');
+    const customInput = document.getElementById('setting-' + group + '-font-custom');
+    const customGroup = document.getElementById(group + '-custom-font-group');
+    const presetFonts = ["'Noto Sans SC', sans-serif", "'Microsoft YaHei', sans-serif", "'PingFang SC', sans-serif", "SimSun, serif", "KaiTi, serif", "Arial, sans-serif", "Georgia, serif", "'Courier New', monospace"];
+    if (fontVal && !presetFonts.includes(fontVal) && customInput) {
+      select.value = '__custom__';
+      customInput.value = fontVal;
+      if (customGroup) customGroup.style.display = 'block';
+    } else {
+      select.value = fontVal;
+      if (customInput) customInput.value = '';
+      if (customGroup) customGroup.style.display = 'none';
+    }
+    document.getElementById('setting-' + group + '-size').value = data.settings[group + 'Size'] || '';
+    const colorVal = data.settings[group + 'Color'] || '';
+    const colorInput = document.getElementById('setting-' + group + '-color');
+    if (colorVal && /^#[0-9A-Fa-f]{6}$/.test(colorVal)) {
+      colorInput.value = colorVal;
+    }
+  }
   toggleBgSettings();
 }
 
@@ -3021,6 +3268,13 @@ async function saveSettings() {
   data.settings.bgColor = document.getElementById('setting-bg-color').value;
   data.settings.bgImage = document.getElementById('setting-bg-image').value.trim();
   data.settings.bgOpacity = parseInt(document.getElementById('setting-bg-opacity').value);
+  // 字体设置
+  for (const group of ['title', 'subtitle', 'footer']) {
+    data.settings[group + 'Font'] = getFontFamily(group);
+    data.settings[group + 'Size'] = document.getElementById('setting-' + group + '-size').value || '';
+    const colorEl = document.getElementById('setting-' + group + '-color');
+    data.settings[group + 'Color'] = colorEl.value || '';
+  }
   const newPwd = document.getElementById('setting-password').value;
   if (newPwd) data.settings.password = newPwd;
   renderAll();
