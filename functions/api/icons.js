@@ -1,8 +1,11 @@
 // Cloudflare Pages Function: /api/icons
-// 获取 icons 目录文件列表
+// 支持：
+//   GET /api/icons              -> 获取 icons 目录文件列表
+//   GET /api/icons?name=xxx.png -> 获取单个图标的 base64 内容
 
 export async function onRequest(context) {
   const { request, env } = context;
+  const url = new URL(request.url);
 
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -35,39 +38,84 @@ export async function onRequest(context) {
   }
 
   try {
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${iconsPath}?ref=${branch}`;
-    const resp = await fetch(apiUrl, {
-      headers: {
-        'Authorization': `token ${token}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'nas-nav',
-      },
-    });
+    const iconName = url.searchParams.get('name');
 
-    if (resp.status === 404) {
-      return new Response(JSON.stringify({ ok: true, files: [] }), {
+    if (!iconName) {
+      // 获取 icons 目录列表
+      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${iconsPath}?ref=${branch}`;
+      const resp = await fetch(apiUrl, {
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'nas-nav',
+        },
+      });
+
+      if (resp.status === 404) {
+        return new Response(JSON.stringify({ ok: true, files: [] }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (!resp.ok) {
+        return new Response(JSON.stringify({ ok: false, error: `GitHub API error: ${resp.status}` }), {
+          status: resp.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const data = await resp.json();
+      const files = Array.isArray(data)
+        ? data.filter(f => f.type === 'file' && /\.(png|jpg|jpeg|gif|svg|webp)$/i.test(f.name))
+            .map(f => ({ name: f.name, size: f.size, sha: f.sha }))
+        : [];
+
+      return new Response(JSON.stringify({ ok: true, files }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } else {
+      // 获取单个图标内容
+      const decodedName = decodeURIComponent(iconName);
+      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${iconsPath}/${decodedName}?ref=${branch}`;
+      const resp = await fetch(apiUrl, {
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'nas-nav',
+        },
+      });
+
+      if (!resp.ok) {
+        return new Response(JSON.stringify({ ok: false, error: `Icon not found: ${resp.status}` }), {
+          status: resp.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const data = await resp.json();
+      if (!data.content) {
+        return new Response(JSON.stringify({ ok: false, error: 'Unable to get icon content' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const ext = decodedName.split('.').pop().toLowerCase();
+      const mime = ext === 'svg' ? 'image/svg+xml'
+        : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg'
+        : ext === 'gif' ? 'image/gif'
+        : ext === 'webp' ? 'image/webp'
+        : 'image/png';
+
+      const dataUrl = `data:${mime};base64,${data.content.replace(/\n/g, '')}`;
+
+      return new Response(JSON.stringify({ ok: true, name: decodedName, dataUrl }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    if (!resp.ok) {
-      return new Response(JSON.stringify({ ok: false, error: `GitHub API error: ${resp.status}` }), {
-        status: resp.status,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const data = await resp.json();
-    const files = Array.isArray(data)
-      ? data.filter(f => f.type === 'file' && /\.(png|jpg|jpeg|gif|svg|webp)$/i.test(f.name))
-          .map(f => ({ name: f.name, size: f.size, sha: f.sha }))
-      : [];
-
-    return new Response(JSON.stringify({ ok: true, files }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
   } catch (err) {
     return new Response(JSON.stringify({ ok: false, error: err.message }), {
       status: 500,
