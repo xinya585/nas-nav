@@ -2,6 +2,7 @@
 // 支持：
 //   GET /api/icons              -> 获取 icons 目录文件列表
 //   GET /api/icons?name=xxx.png -> 获取单个图标的 base64 内容
+//   DELETE /api/icons?name=xxx.png -> 删除 GitHub 仓库中的图标文件
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -9,7 +10,7 @@ export async function onRequest(context) {
 
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 
@@ -17,7 +18,7 @@ export async function onRequest(context) {
     return new Response(null, { headers: corsHeaders, status: 204 });
   }
 
-  if (request.method !== 'GET') {
+  if (request.method !== 'GET' && request.method !== 'DELETE') {
     return new Response(JSON.stringify({ ok: false, error: 'Method not allowed' }), {
       status: 405,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -39,6 +40,67 @@ export async function onRequest(context) {
 
   try {
     const iconName = url.searchParams.get('name');
+
+    // DELETE 方法：删除图标文件
+    if (request.method === 'DELETE') {
+      if (!iconName) {
+        return new Response(JSON.stringify({ ok: false, error: 'name parameter required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const decodedName = decodeURIComponent(iconName);
+      const filePath = `${iconsPath}/${decodedName}`;
+
+      // 先获取文件 sha
+      const getResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`, {
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'nas-nav',
+        },
+      });
+
+      if (!getResp.ok) {
+        return new Response(JSON.stringify({ ok: false, error: `Icon not found: ${getResp.status}` }), {
+          status: getResp.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const fileData = await getResp.json();
+      const fileSha = fileData.sha;
+
+      // 删除文件
+      const deleteResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json',
+          'User-Agent': 'nas-nav',
+        },
+        body: JSON.stringify({
+          message: `Delete icon: ${decodedName}`,
+          sha: fileSha,
+          branch: branch,
+        }),
+      });
+
+      if (deleteResp.ok) {
+        return new Response(JSON.stringify({ ok: true, message: `Deleted: ${decodedName}` }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } else {
+        const errData = await deleteResp.json().catch(() => ({}));
+        return new Response(JSON.stringify({ ok: false, error: `Delete failed: ${deleteResp.status}`, detail: errData.message || '' }), {
+          status: deleteResp.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
 
     if (!iconName) {
       // 获取 icons 目录列表
