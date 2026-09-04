@@ -1544,15 +1544,22 @@ async function initData() {
   setSyncState('syncing');
   const result = await fetchDataFromGithub();
   if (result.ok && result.data) {
-    // 检查数据是否有更新
-    const localHash = JSON.stringify(localData).length;
-    const remoteHash = JSON.stringify(result.data).length;
+    // 用关键字段比较数据是否真正变化，避免不必要的重新渲染
+    const localSig = (localData.links ? localData.links.length : 0) + '|' +
+                    (localData.categories ? localData.categories.length : 0) + '|' +
+                    (localData.settings ? localData.settings.title : '') + '|' +
+                    (localData.settings ? localData.settings.heroTitle : '');
+    const remoteSig = (result.data.links ? result.data.links.length : 0) + '|' +
+                     (result.data.categories ? result.data.categories.length : 0) + '|' +
+                     (result.data.settings ? result.data.settings.title : '') + '|' +
+                     (result.data.settings ? result.data.settings.heroTitle : '');
+
     data = result.data;
     fileSha = result.sha;
     saveLocalData();
     setSyncState('synced');
-    // 只有数据不同时才重新渲染，避免不必要的闪烁
-    if (localHash !== remoteHash) {
+    // 只有数据真正不同时才重新渲染，避免闪烁
+    if (localSig !== remoteSig) {
       renderAll();
     }
   } else if (result.ok && !result.data) {
