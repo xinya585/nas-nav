@@ -95,7 +95,29 @@ export async function onRequest(context) {
       }
 
       const data = await resp.json();
-      if (!data.content) {
+      
+      let base64Content = null;
+      
+      if (data.content) {
+        // 小文件：直接返回 base64 content
+        base64Content = data.content.replace(/\n/g, '');
+      } else if (data.download_url) {
+        // 大文件：通过 download_url 下载
+        const fileResp = await fetch(data.download_url);
+        if (!fileResp.ok) {
+          return new Response(JSON.stringify({ ok: false, error: `Failed to download icon: ${fileResp.status}` }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        const arrayBuffer = await fileResp.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        base64Content = btoa(binary);
+      } else {
         return new Response(JSON.stringify({ ok: false, error: 'Unable to get icon content' }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -109,7 +131,7 @@ export async function onRequest(context) {
         : ext === 'webp' ? 'image/webp'
         : 'image/png';
 
-      const dataUrl = `data:${mime};base64,${data.content.replace(/\n/g, '')}`;
+      const dataUrl = `data:${mime};base64,${base64Content}`;
 
       return new Response(JSON.stringify({ ok: true, name: decodedName, dataUrl }), {
         status: 200,
