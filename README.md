@@ -13,11 +13,15 @@
 
 <br>
 
-<a href="https://dash.cloudflare.com/?to=/:account/pages/new/provider/github&repositoryUrl=https://github.com/xinya585/nas-nav" target="_blank">
-  <img src="https://img.shields.io/badge/%F0%9F%9A%80%20%E4%B8%80%E9%94%AE%E9%83%A8%E7%BD%B2%E5%88%B0%20Cloudflare-059669?style=for-the-badge&logo=cloudflare" alt="一键部署到 Cloudflare">
-</a>
+<div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+  <a href="https://github.com/xinya585/nas-nav/fork" target="_blank">
+    <img src="https://img.shields.io/badge/%F0%9F%8D%B4%20Fork-181717?style=for-the-badge&logo=github" alt="Fork 仓库">
+  </a>
+  <a href="https://dash.cloudflare.com/?to=/:account/pages/new/provider/github&repositoryUrl=https://github.com/xinya585/nas-nav" target="_blank">
+    <img src="https://img.shields.io/badge/%F0%9F%9A%80%20%E4%B8%80%E9%94%AE%E9%83%A8%E7%BD%B2-059669?style=for-the-badge&logo=cloudflare" alt="一键部署到 Cloudflare">
+  </a>
+</div>
 
-<br>
 <br>
 
 [🚀 在线预览](https://nav.scy.cc.cd) · [✨ 功能特性](#-功能特性) · [🚀 部署教程](#-部署教程) · [⚙️ 工作原理](#️-工作原理) · [📖 使用说明](#-使用说明) · [❓ 常见问题](#-常见问题)
@@ -105,19 +109,35 @@
 
 ### ⚡ 快速部署（推荐）
 
-点击下方按钮，一键跳转到 Cloudflare Pages 创建页面，仓库信息已自动预填：
+> ⚠️ **注意**：Cloudflare Pages 只能部署你自己有写权限的仓库（因为后台修改数据需要写入 GitHub）。所以需要**先 Fork 仓库**，再一键部署。
+
+**快速部署 3 步走**：
+
+**第 1 步：Fork 仓库**（10 秒）
+
+点击下方按钮 Fork 到你的 GitHub：
+
+<a href="https://github.com/xinya585/nas-nav/fork" target="_blank">
+  <img src="https://img.shields.io/badge/%F0%9F%8D%B4%20Fork%20%E4%BB%93%E5%BA%93-181717?style=for-the-badge&logo=github" alt="Fork 仓库">
+</a>
+
+**第 2 步：一键部署到 Cloudflare**（1 分钟）
+
+Fork 完成后，点击下方按钮跳转到 Cloudflare Pages 创建页面：
 
 <a href="https://dash.cloudflare.com/?to=/:account/pages/new/provider/github&repositoryUrl=https://github.com/xinya585/nas-nav" target="_blank">
   <img src="https://img.shields.io/badge/%F0%9F%9A%80%20%E4%B8%80%E9%94%AE%E9%83%A8%E7%BD%B2%E5%88%B0%20Cloudflare-059669?style=for-the-badge&logo=cloudflare" alt="一键部署到 Cloudflare">
 </a>
 
-**快速部署 3 步走**：
+- 首次使用需授权 Cloudflare 访问 GitHub
+- 在仓库列表中选择**你刚才 Fork 的仓库**（不是上游仓库）
+- 构建设置保持默认，点击「Save and Deploy」
 
-1. **点击上方按钮** → 跳转到 Cloudflare Pages 创建页面（首次需授权 GitHub 访问）
-2. **选择仓库并部署** → 确认仓库信息，构建设置保持默认，点击「Save and Deploy」
-3. **配置环境变量** → 部署完成后，按下方「第四步：配置环境变量」添加 3 个变量，完成！
+**第 3 步：配置环境变量**（2 分钟）
 
-> 💡 一键部署会自动 Fork 仓库到你的 GitHub 账号并创建 Cloudflare Pages 项目。如果你想手动控制每一步，请参考下方的详细步骤。
+部署完成后，按下方「第四步：配置环境变量」添加 3 个变量，完成！
+
+> 💡 如果你想手动控制每一步（如修改仓库名、分支等），请参考下方的详细步骤。
 
 ---
 
