@@ -28,8 +28,8 @@ export async function onRequest(context) {
   }
 
   const token = env.GITHUB_TOKEN;
-  const owner = env.GITHUB_OWNER;
-  const repo = env.GITHUB_REPO;
+  const owner = env.GITHUB_OWNER || 'xinya585';
+  const repo = env.GITHUB_REPO || 'nas-nav-private';
   const branch = env.GITHUB_BRANCH || 'main';
   const path = env.GITHUB_ICONS_PATH || 'icons';
 
