@@ -2850,6 +2850,13 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   });
 });
 
+// 阻止弹窗内部点击事件冒泡到遮罩层，防止误关闭
+document.querySelectorAll('.modal').forEach(modal => {
+  modal.addEventListener('click', function(e) {
+    e.stopPropagation();
+  });
+});
+
 // ===== 初始化 =====
 // 恢复登录状态
 if (localStorage.getItem(ADMIN_SESSION_KEY) === '1') {
