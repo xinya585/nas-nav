@@ -1044,17 +1044,21 @@ body {
           </div>
           <div id="device-flow-panel" style="display:none;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;">
             <div style="font-weight:600;margin-bottom:8px;">GitHub 设备授权</div>
-            <div style="margin-bottom:12px;font-size:13px;line-height:1.6;">
-              1. 复制下方验证码<br>
-              2. 点击 <a href="https://github.com/login/device" target="_blank" style="color:var(--accent);font-weight:600;">打开 GitHub 授权页面</a>（新标签页）<br>
-              3. 粘贴验证码并点击授权<br>
-              4. <strong>授权成功后返回此页面，将自动配置</strong>
+            <div style="background:#fffbeb;border:1px solid #f59e0b;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;line-height:1.6;">
+              <strong>⚠️ 操作步骤：</strong><br>
+              1. 点击下方按钮打开 GitHub 授权页面（新标签页）<br>
+              2. 粘贴验证码并点击授权<br>
+              3. <strong>授权成功后切回本页面，将自动配置</strong>
             </div>
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-              <span style="font-size:13px;color:var(--text-muted);">输入验证码：</span>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+              <span style="font-size:13px;color:var(--text-muted);">验证码：</span>
               <code id="device-flow-code" style="font-size:20px;font-weight:700;letter-spacing:2px;background:var(--bg);padding:6px 16px;border-radius:6px;border:1px solid var(--border);"></code>
               <button type="button" class="btn" style="font-size:12px;padding:4px 10px;" onclick="copyDeviceCode()">复制</button>
             </div>
+            <a href="https://github.com/login/device" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;margin-bottom:12px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              打开 GitHub 授权页面
+            </a>
             <div id="device-flow-status" style="font-size:13px;color:var(--text-muted);">等待授权中...请勿关闭此页面</div>
             <button type="button" class="btn" style="margin-top:12px;font-size:12px;" onclick="cancelDeviceFlow()">取消</button>
           </div>
@@ -2626,15 +2630,10 @@ async function startGithubDeviceFlow() {
     // 显示授权面板
     document.getElementById('device-flow-panel').style.display = 'block';
     document.getElementById('device-flow-code').textContent = result.user_code;
-    document.getElementById('device-flow-status').textContent = '验证码已复制，正在打开 GitHub 授权页面...授权后请切回本页面';
+    document.getElementById('device-flow-status').textContent = '验证码已复制，请点击下方按钮打开 GitHub 授权页面';
 
     // 自动复制验证码
     copyDeviceCode();
-
-    // 自动打开 GitHub 授权页面（新标签页）
-    try {
-      window.open('https://github.com/login/device', '_blank');
-    } catch(e) {}
 
     // 轮询 access token
     let pollInterval = (result.interval || 5) * 1000;
