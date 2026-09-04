@@ -767,53 +767,6 @@ body {
   border-top: 1px solid var(--border);
 }
 </style>
-<script>
-// 页面渲染前立即从 localStorage 读取数据，避免显示默认内容
-(function() {
-  try {
-    var raw = localStorage.getItem('nas_nav_data');
-    if (raw) {
-      var data = JSON.parse(raw);
-      if (data.settings) {
-        // 更新浏览器标题
-        if (data.settings.title) document.title = data.settings.title;
-        // 更新页面默认标题和副标题（DOM 就绪后执行）
-        document.addEventListener('DOMContentLoaded', function() {
-          var heroTitle = document.getElementById('hero-title');
-          var heroSubtitle = document.getElementById('hero-subtitle');
-          var siteTitle = document.getElementById('site-title');
-          if (heroTitle && data.settings.heroTitle) heroTitle.textContent = data.settings.heroTitle;
-          if (heroSubtitle && data.settings.heroSubtitle) heroSubtitle.textContent = data.settings.heroSubtitle;
-          if (siteTitle && data.settings.title) siteTitle.textContent = data.settings.title;
-          // 应用背景
-          var bgLayer = document.getElementById('bg-layer');
-          if (bgLayer && data.settings.bgType) {
-            if (data.settings.bgType === 'color' && data.settings.bgColor) {
-              bgLayer.style.background = data.settings.bgColor;
-              bgLayer.style.opacity = (data.settings.bgOpacity || 100) / 100;
-              bgLayer.style.display = 'block';
-            } else if (data.settings.bgType === 'image' && data.settings.bgImage) {
-              bgLayer.style.background = 'url(' + data.settings.bgImage + ') center/cover fixed';
-              bgLayer.style.opacity = (data.settings.bgOpacity || 100) / 100;
-              bgLayer.style.display = 'block';
-            }
-          }
-          // 应用 Logo
-          if (data.settings.logo) {
-            var logos = document.querySelectorAll('.logo-img');
-            logos.forEach(function(img) { img.src = data.settings.logo; });
-          }
-          // 备案号
-          if (data.settings.icp) {
-            var icpEl = document.getElementById('footer-icp');
-            if (icpEl) { icpEl.textContent = data.settings.icp; icpEl.style.display = ''; }
-          }
-        });
-      }
-    }
-  } catch(e) {}
-})();
-</script>
 </head>
 <body>
 
@@ -853,6 +806,49 @@ body {
       <input type="text" class="search-input" id="search-input" placeholder="搜索服务名称或描述..." autocomplete="off">
     </div>
   </section>
+  <script>
+  // 立即从 localStorage 读取数据并更新页面，避免显示默认内容
+  (function() {
+    try {
+      var raw = localStorage.getItem('nas_nav_data');
+      if (raw) {
+        var data = JSON.parse(raw);
+        if (data.settings) {
+          var ht = document.getElementById('hero-title');
+          var hs = document.getElementById('hero-subtitle');
+          var st = document.getElementById('site-title');
+          if (ht && data.settings.heroTitle) ht.textContent = data.settings.heroTitle;
+          if (hs && data.settings.heroSubtitle) hs.textContent = data.settings.heroSubtitle;
+          if (st && data.settings.title) st.textContent = data.settings.title;
+          if (data.settings.title) document.title = data.settings.title;
+          // 应用背景
+          var bg = document.getElementById('bg-layer');
+          if (bg) {
+            if (data.settings.bgType === 'color' && data.settings.bgColor) {
+              bg.style.background = data.settings.bgColor;
+              bg.style.opacity = (data.settings.bgOpacity || 100) / 100;
+              bg.style.display = 'block';
+            } else if (data.settings.bgType === 'image' && data.settings.bgImage) {
+              bg.style.background = 'url(' + data.settings.bgImage + ') center/cover fixed';
+              bg.style.opacity = (data.settings.bgOpacity || 100) / 100;
+              bg.style.display = 'block';
+            }
+          }
+          // 应用 Logo
+          if (data.settings.logo) {
+            var logos = document.querySelectorAll('.logo-img');
+            for (var i = 0; i < logos.length; i++) logos[i].src = data.settings.logo;
+          }
+          // 备案号
+          if (data.settings.icp) {
+            var icp = document.getElementById('footer-icp');
+            if (icp) { icp.textContent = data.settings.icp; icp.style.display = ''; }
+          }
+        }
+      }
+    } catch(e) {}
+  })();
+  </script>
 
   <div class="category-bar" id="category-bar"></div>
 
