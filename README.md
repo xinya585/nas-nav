@@ -13,6 +13,13 @@
 
 <br>
 
+<a href="https://dash.cloudflare.com/?to=/:account/pages/new/provider/github&repositoryUrl=https://github.com/xinya585/nas-nav" target="_blank">
+  <img src="https://img.shields.io/badge/%F0%9F%9A%80%20%E4%B8%80%E9%94%AE%E9%83%A8%E7%BD%B2%E5%88%B0%20Cloudflare-059669?style=for-the-badge&logo=cloudflare" alt="一键部署到 Cloudflare">
+</a>
+
+<br>
+<br>
+
 [🚀 在线预览](https://nav.scy.cc.cd) · [✨ 功能特性](#-功能特性) · [🚀 部署教程](#-部署教程) · [⚙️ 工作原理](#️-工作原理) · [📖 使用说明](#-使用说明) · [❓ 常见问题](#-常见问题)
 
 <br>
@@ -94,7 +101,25 @@
 
 ## 🚀 部署教程
 
-> 全程约 10-15 分钟，免费即可完成。请按顺序操作，不要跳过步骤。
+> 全程约 10-15 分钟，免费即可完成。
+
+### ⚡ 快速部署（推荐）
+
+点击下方按钮，一键跳转到 Cloudflare Pages 创建页面，仓库信息已自动预填：
+
+<a href="https://dash.cloudflare.com/?to=/:account/pages/new/provider/github&repositoryUrl=https://github.com/xinya585/nas-nav" target="_blank">
+  <img src="https://img.shields.io/badge/%F0%9F%9A%80%20%E4%B8%80%E9%94%AE%E9%83%A8%E7%BD%B2%E5%88%B0%20Cloudflare-059669?style=for-the-badge&logo=cloudflare" alt="一键部署到 Cloudflare">
+</a>
+
+**快速部署 3 步走**：
+
+1. **点击上方按钮** → 跳转到 Cloudflare Pages 创建页面（首次需授权 GitHub 访问）
+2. **选择仓库并部署** → 确认仓库信息，构建设置保持默认，点击「Save and Deploy」
+3. **配置环境变量** → 部署完成后，按下方「第四步：配置环境变量」添加 3 个变量，完成！
+
+> 💡 一键部署会自动 Fork 仓库到你的 GitHub 账号并创建 Cloudflare Pages 项目。如果你想手动控制每一步，请参考下方的详细步骤。
+
+---
 
 ### 前置准备
 
