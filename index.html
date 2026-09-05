@@ -810,6 +810,7 @@ body {
     </div>
     <div class="status-right">
       <div class="visitor-ip" id="visitor-ip" title="来访IP">
+        <span id="visitor-flag" style="display:none;margin-right:4px;"></span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <span id="ip-text">获取中...</span>
       </div>
@@ -1207,6 +1208,23 @@ body {
             <div class="form-group" id="bg-opacity-group" style="display:none;">
               <label class="label">背景透明度：<span id="bg-opacity-value">100</span>%</label>
               <input type="range" id="setting-bg-opacity" min="10" max="100" value="100" style="width:100%;" oninput="document.getElementById('bg-opacity-value').textContent=this.value">
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border); margin:20px 0; padding-top:20px;">
+            <h3 style="font-size:15px; margin-bottom:16px;">显示设置</h3>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                <input type="checkbox" id="setting-show-ip" style="width:18px; height:18px; cursor:pointer;">
+                <span style="font-size:14px;">显示来访者 IP</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                <input type="checkbox" id="setting-show-flag" style="width:18px; height:18px; cursor:pointer;">
+                <span style="font-size:14px;">显示国旗（依赖 IP 显示，使用 Flagpedia CDN）</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                <input type="checkbox" id="setting-show-clock" style="width:18px; height:18px; cursor:pointer;">
+                <span style="font-size:14px;">显示实时时钟</span>
+              </label>
             </div>
           </div>
           <div style="border-top:1px solid var(--border); margin:20px 0; padding-top:20px;">
@@ -2172,67 +2190,85 @@ document.getElementById('search-input').addEventListener('input', function(e) {
 
 // ===== 时钟 =====
 function updateClock() {
+  const clockEl = document.getElementById('clock');
+  if (!clockEl) return;
+  const settings = (data && data.settings) ? data.settings : {};
+  const showClock = settings.showClock !== false; // 默认显示
+  clockEl.style.display = showClock ? '' : 'none';
+  if (!showClock) return;
+
   const now = new Date();
   const h = String(now.getHours()).padStart(2, '0');
   const m = String(now.getMinutes()).padStart(2, '0');
   const s = String(now.getSeconds()).padStart(2, '0');
-  document.getElementById('clock').textContent = h + ':' + m + ':' + s;
+  clockEl.textContent = h + ':' + m + ':' + s;
 }
 setInterval(updateClock, 1000);
 updateClock();
 
-// ===== 来访 IP =====
+// ===== 来访 IP + 国旗 =====
 async function fetchVisitorIP() {
   const ipEl = document.getElementById('ip-text');
+  const flagEl = document.getElementById('visitor-flag');
   if (!ipEl) return;
 
-  // 按优先级尝试多个 IP 接口
+  // 检查显示开关
+  const settings = (data && data.settings) ? data.settings : {};
+  const showIp = settings.showVisitorIp !== false; // 默认显示
+  const showFlag = settings.showFlag !== false;   // 默认显示
+  const ipContainer = document.getElementById('visitor-ip');
+  if (ipContainer) ipContainer.style.display = showIp ? '' : 'none';
+  if (!showIp) return;
+
+  // 按优先级尝试多个 IP 接口（同时获取国家信息）
   const providers = [
-    // 1. Cloudflare trace（站点托管在 CF 上，最可靠，返回文本格式）
+    // 1. ipwho.is（返回 IP + 国家信息，支持 IPv4/IPv6）
+    async () => {
+      const resp = await fetch('https://ipwho.is/');
+      if (!resp.ok) throw new Error('ipwho failed');
+      const json = await resp.json();
+      if (json.success) {
+        return { ip: json.ip, country: json.country, countryCode: (json.country_code || '').toLowerCase() };
+      }
+      throw new Error('ipwho no success');
+    },
+    // 2. Cloudflare trace（只返回 IP，国家信息需额外查询）
     async () => {
       const resp = await fetch('https://www.cloudflare.com/cdn-cgi/trace');
       if (!resp.ok) throw new Error('cf trace failed');
       const text = await resp.text();
       const match = text.match(/^ip=(.+)$/m);
-      if (match) return match[1];
+      if (match) return { ip: match[1], country: '', countryCode: '' };
       throw new Error('cf trace no ip');
     },
-    // 2. ip.sb（支持 CORS，返回 JSON）
+    // 3. ip.sb（只返回 IP）
     async () => {
       const resp = await fetch('https://api.ip.sb/jsonip');
       if (!resp.ok) throw new Error('ip.sb failed');
       const json = await resp.json();
-      return json.ip;
-    },
-    // 3. ipwho.is（支持 CORS，返回 JSON）
-    async () => {
-      const resp = await fetch('https://ipwho.is/');
-      if (!resp.ok) throw new Error('ipwho failed');
-      const json = await resp.json();
-      if (json.success) return json.ip;
-      throw new Error('ipwho no success');
-    },
-    // 4. ipify.org（备用）
-    async () => {
-      const resp = await fetch('https://api.ipify.org?format=json');
-      if (!resp.ok) throw new Error('ipify failed');
-      const json = await resp.json();
-      return json.ip;
-    },
-    // 5. ipapi.co（备用）
-    async () => {
-      const resp = await fetch('https://ipapi.co/json/');
-      if (!resp.ok) throw new Error('ipapi failed');
-      const json = await resp.json();
-      return json.ip;
+      return { ip: json.ip, country: '', countryCode: '' };
     },
   ];
 
   for (const provider of providers) {
     try {
-      const ip = await provider();
-      if (ip) {
-        ipEl.textContent = ip;
+      const result = await provider();
+      if (result && result.ip) {
+        // 显示 IP（IPv6 过长时截断）
+        let displayIp = result.ip;
+        if (displayIp.length > 20) {
+          displayIp = displayIp.substring(0, 15) + '...';
+        }
+        ipEl.textContent = displayIp;
+        ipEl.title = result.ip; // 鼠标悬停显示完整 IP
+
+        // 显示国旗
+        if (showFlag && flagEl && result.countryCode) {
+          flagEl.innerHTML = `<img src="https://flagcdn.com/w20/${result.countryCode}.png" alt="${result.country || ''}" style="width:20px;height:15px;vertical-align:middle;border-radius:2px;" title="${result.country || result.countryCode}">`;
+          flagEl.style.display = '';
+        } else if (flagEl) {
+          flagEl.style.display = 'none';
+        }
         return;
       }
     } catch (e) {
@@ -2240,6 +2276,7 @@ async function fetchVisitorIP() {
     }
   }
   ipEl.textContent = '未知';
+  if (flagEl) flagEl.style.display = 'none';
 }
 fetchVisitorIP();
 
@@ -3251,6 +3288,10 @@ function loadSettingsForm() {
       colorInput.value = colorVal;
     }
   }
+  // 显示设置
+  document.getElementById('setting-show-ip').checked = data.settings.showVisitorIp !== false;
+  document.getElementById('setting-show-flag').checked = data.settings.showFlag !== false;
+  document.getElementById('setting-show-clock').checked = data.settings.showClock !== false;
   toggleBgSettings();
 }
 
@@ -3275,6 +3316,10 @@ async function saveSettings() {
     const colorEl = document.getElementById('setting-' + group + '-color');
     data.settings[group + 'Color'] = colorEl.value || '';
   }
+  // 显示设置
+  data.settings.showVisitorIp = document.getElementById('setting-show-ip').checked;
+  data.settings.showFlag = document.getElementById('setting-show-flag').checked;
+  data.settings.showClock = document.getElementById('setting-show-clock').checked;
   const newPwd = document.getElementById('setting-password').value;
   if (newPwd) data.settings.password = newPwd;
   renderAll();
