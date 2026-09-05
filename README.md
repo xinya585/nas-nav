@@ -4,9 +4,9 @@
 
 **一个简洁优雅的自托管服务导航页，带后台管理，支持多设备自动同步**
 
-**当前版本：V1.0.0**
+**当前版本：V1.0.1**
 
-[![版本](https://img.shields.io/badge/version-1.0.0-059669?style=flat-square)]()
+[![版本](https://img.shields.io/badge/version-1.0.1-059669?style=flat-square)]()
 [![部署状态](https://img.shields.io/badge/Cloudflare-Pages-059669?style=flat-square&logo=cloudflare)](https://pages.cloudflare.com)
 [![Docker](https://img.shields.io/badge/Docker-xinya585/nas--nav-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/xinya585/nas-nav)
 [![GitHub](https://img.shields.io/badge/GitHub-Data%20Sync-181717?style=flat-square&logo=github)](https://github.com)
@@ -69,8 +69,10 @@
 | **智能卡片** | 有描述时显示名称+描述；无描述时只显示名称并居中放大（17px） |
 | **响应式布局** | 桌面端多列自适应（自动换行），移动端完美适配 |
 | **秒开无闪烁** | 刷新页面立即显示缓存数据，后台静默从 GitHub 拉取最新数据，告别默认状态闪烁 |
-| **实时时钟** | 顶部状态栏显示当前时间，每秒更新 |
-| **来访 IP 显示** | 时钟旁显示访客 IP 地址，多接口优先级容错 |
+| **实时时钟** | 顶部状态栏显示当前时间，每秒更新，可在后台开关 |
+| **来访 IP 显示** | 时钟旁显示访客 IP 地址，多接口优先级容错，支持 IPv4/IPv6，可在后台开关 |
+| **国旗显示** | IP 前显示访客国家国旗（Flagpedia CDN），鼠标悬停显示国家名，可在后台开关 |
+| **显示开关** | 后台可独立控制 IP、国旗、时钟的显示/隐藏，页面更简洁 |
 | **备案号** | 可在页脚显示备案号，点击跳转工信部备案查询 |
 | **页脚信息** | 显示部署信息、GitHub 仓库链接、当前版本号 |
 
@@ -705,6 +707,15 @@ nas-nav/
    - **图片背景**：输入图片 URL 或点击「上传图片」本地上传（自动压缩到 1920px 宽）
 3. 调节背景透明度（10% - 100%）
 4. 点击 **保存设置**
+
+### 显示设置
+
+1. 进入后台 → **站点设置** → 找到「显示设置」区域
+2. 三个独立开关：
+   - **显示来访者 IP**：右上角显示访客 IP 地址（支持 IPv4/IPv6，长地址自动截断，悬停显示完整 IP）
+   - **显示国旗**：IP 前显示访客国家国旗（使用 Flagpedia CDN，悬停显示国家名），依赖 IP 显示
+   - **显示实时时钟**：右上角显示当前时间，每秒更新
+3. 点击 **保存设置** 立即生效
 
 ### 字体设置
 
