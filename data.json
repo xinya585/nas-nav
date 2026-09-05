@@ -8,7 +8,10 @@
     "bgType": "none",
     "bgColor": "#f2f6f4",
     "bgImage": "",
-    "bgOpacity": 100
+    "bgOpacity": 100,
+    "showVisitorIp": true,
+    "showFlag": true,
+    "showClock": true
   },
   "categories": [
     {
