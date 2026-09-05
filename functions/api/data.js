@@ -58,8 +58,30 @@ export async function onRequest(context) {
       }
 
       const json = await resp.json();
+      
+      // 处理大文件（超过1MB时 GitHub Contents API 不返回 content，需要用 Git Blob API）
+      let contentB64 = json.content;
+      if (!contentB64 && json.git_url) {
+        const blobResp = await fetch(json.git_url, { headers: ghHeaders });
+        if (!blobResp.ok) {
+          return new Response(
+            JSON.stringify({ ok: false, reason: `blob_http_${blobResp.status}` }),
+            { status: blobResp.status, headers: jsonHeaders }
+          );
+        }
+        const blobJson = await blobResp.json();
+        contentB64 = blobJson.content;
+      }
+      
+      if (!contentB64) {
+        return new Response(
+          JSON.stringify({ ok: false, reason: 'no_content', message: 'GitHub 返回无内容' }),
+          { status: 502, headers: jsonHeaders }
+        );
+      }
+      
       // GitHub 返回的 base64 可能包含换行符，先清理
-      const cleanB64 = json.content.replace(/\s/g, '');
+      const cleanB64 = contentB64.replace(/\s/g, '');
       const bytes = Uint8Array.from(atob(cleanB64), c => c.charCodeAt(0));
       const content = JSON.parse(new TextDecoder('utf-8').decode(bytes));
       return new Response(
