@@ -25,11 +25,11 @@
 
 <br>
 
-[🚀 在线预览](https://nav.scy.cc.cd) · [✨ 功能特性](#-功能特性) · [🚀 Cloudflare 部署](#-部署教程) · [🐳 Docker 部署](#-docker-部署本地-nas-用户推荐) · [⚙️ 工作原理](#️-工作原理) · [📖 使用说明](#-使用说明) · [❓ 常见问题](#-常见问题)
+[🚀 在线预览](https://www.133132131.xyz) · [✨ 功能特性](#-功能特性) · [🚀 Cloudflare 部署](#-部署教程) · [🐳 Docker 部署](#-docker-部署本地-nas-用户推荐) · [⚙️ 工作原理](#️-工作原理) · [📖 使用说明](#-使用说明) · [❓ 常见问题](#-常见问题)
 
 <br>
 
-> 🌐 **在线体验：[https://nav.scy.cc.cd](https://nav.scy.cc.cd)**
+> 🌐 **在线体验：[https://www.133132131.xyz](https://www.133132131.xyz)**
 >
 > 🔐 **后台入口：`https://你的域名/#/admin`，默认密码 `admin123`**
 
@@ -893,6 +893,6 @@ nas-nav/
 
 **如果这个项目对你有帮助，别忘了给个 ⭐ Star 支持一下！**
 
-**当前版本：V1.0.0** · [GitHub 仓库](https://github.com/xinya585/nas-nav) · [在线预览](https://nav.scy.cc.cd)
+**当前版本：V1.0.0** · [GitHub 仓库](https://github.com/xinya585/nas-nav) · [在线预览](https://www.133132131.xyz)
 
 </div>
