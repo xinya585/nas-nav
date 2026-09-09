@@ -418,6 +418,25 @@ body {
   font-size: 17px;
   font-weight: 600;
 }
+/* 网络状态指示灯 */
+.link-card { position: relative; overflow: visible; }
+.net-status {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #9ca3af;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.8);
+  transition: background 0.3s;
+  z-index: 2;
+}
+.net-status.online { background: #22c55e; box-shadow: 0 0 6px #22c55e, 0 0 0 2px rgba(255,255,255,0.8); }
+.net-status.slow { background: #eab308; box-shadow: 0 0 6px #eab308, 0 0 0 2px rgba(255,255,255,0.8); }
+.net-status.offline { background: #ef4444; box-shadow: 0 0 6px #ef4444, 0 0 0 2px rgba(255,255,255,0.8); }
+.net-status.checking { background: #9ca3af; animation: net-pulse 1.5s infinite; }
+@keyframes net-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 .empty-state {
   text-align: center;
   padding: 60px 20px;
@@ -2162,6 +2181,7 @@ function renderGrid() {
       const textIconStyle = hasIconUrl ? ' style="display:none;"' : '';
       const cardClass = 'link-card' + (hasDesc ? '' : ' no-desc');
       html += '<a href="' + escapeAttr(link.url) + '" target="_blank" rel="noopener noreferrer" class="' + cardClass + '" style="--card-accent:' + (link.color || '#059669') + '">';
+      html += '<span class="net-status checking" data-url="' + escapeAttr(link.url) + '" title="检测中..."></span>';
       html += '<div class="card-icon-wrap">' + iconHtml + '<div class="card-icon"' + textIconStyle + '>' + escapeHtml(iconText) + '</div></div>';
       html += '<div class="card-info">';
       html += '<div class="card-name">' + escapeHtml(link.name) + '</div>';
@@ -2181,6 +2201,68 @@ function renderGrid() {
   }
 
   container.innerHTML = html;
+  
+  // 异步检测所有服务网络状态
+  setTimeout(checkAllServiceStatus, 100);
+}
+
+// 网络状态检测
+const netStatusCache = new Map();
+
+async function checkServiceStatus(url) {
+  if (netStatusCache.has(url)) {
+    return netStatusCache.get(url);
+  }
+  
+  return new Promise((resolve) => {
+    const startTime = Date.now();
+    const timeoutMs = 3000;
+    
+    const timer = setTimeout(() => {
+      netStatusCache.set(url, { status: 'offline', time: timeoutMs });
+      resolve('offline');
+    }, timeoutMs);
+    
+    fetch(url, { mode: 'no-cors', cache: 'no-store' })
+      .then(() => {
+        clearTimeout(timer);
+        const elapsed = Date.now() - startTime;
+        let status = 'online';
+        if (elapsed > 1000) status = 'slow';
+        netStatusCache.set(url, { status, time: elapsed });
+        resolve(status);
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        netStatusCache.set(url, { status: 'offline', time: 0 });
+        resolve('offline');
+      });
+  });
+}
+
+async function checkAllServiceStatus() {
+  const indicators = document.querySelectorAll('.net-status');
+  const batch = [];
+  
+  indicators.forEach((el, idx) => {
+    const url = el.dataset.url;
+    if (!url) return;
+    
+    // 分批检测，避免同时发起太多请求
+    const delay = Math.floor(idx / 5) * 500;
+    batch.push(new Promise(resolve => {
+      setTimeout(async () => {
+        const status = await checkServiceStatus(url);
+        el.classList.remove('checking');
+        el.classList.add(status);
+        const titles = { online: '网络正常', slow: '网络不佳', offline: '无法访问' };
+        el.title = titles[status] || status;
+        resolve();
+      }, delay);
+    }));
+  });
+  
+  await Promise.all(batch);
 }
 
 document.getElementById('search-input').addEventListener('input', function(e) {
