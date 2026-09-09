@@ -418,6 +418,108 @@ body {
   font-size: 17px;
   font-weight: 600;
 }
+
+/* ===== 卡片效果：浮雕 ===== */
+.card-style-embossed .link-card {
+  background: linear-gradient(145deg, #ffffff, #e6e6e6);
+  box-shadow: 6px 6px 12px #d1d1d1, -6px -6px 12px #ffffff;
+  border: none;
+}
+.card-style-embossed .link-card:hover {
+  box-shadow: 8px 8px 16px #d1d1d1, -8px -8px 16px #ffffff;
+  transform: translateY(-2px);
+}
+
+/* ===== 卡片效果：凹陷 ===== */
+.card-style-inset .link-card {
+  background: var(--bg-card);
+  box-shadow: inset 4px 4px 8px rgba(0,0,0,0.1), inset -4px -4px 8px rgba(255,255,255,0.8);
+  border: 1px solid var(--border);
+}
+.card-style-inset .link-card:hover {
+  box-shadow: inset 2px 2px 4px rgba(0,0,0,0.1), inset -2px -2px 4px rgba(255,255,255,0.8);
+}
+
+/* ===== 卡片效果：玻璃拟态 ===== */
+.card-style-glass .link-card {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+.card-style-glass .link-card:hover {
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== 卡片效果：霓虹发光 ===== */
+.card-style-neon .link-card {
+  background: var(--bg-card);
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 10px var(--accent-dim), inset 0 0 10px var(--accent-dim);
+}
+.card-style-neon .link-card:hover {
+  box-shadow: 0 0 20px var(--accent-glow), inset 0 0 15px var(--accent-dim);
+  border-color: var(--accent);
+}
+
+/* ===== 卡片效果：渐变边框 ===== */
+.card-style-gradient .link-card {
+  background: var(--bg-card);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+}
+.card-style-gradient .link-card::before {
+  content: '';
+  position: absolute;
+  top: -2px; left: -2px; right: -2px; bottom: -2px;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6, #ec4899);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+.card-style-gradient .link-card:hover::before {
+  opacity: 1;
+}
+
+/* ===== 卡片效果：3D悬浮 ===== */
+.card-style-float3d .link-card {
+  background: var(--bg-card);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 10px 20px rgba(0,0,0,0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.card-style-float3d .link-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.15), 0 20px 40px rgba(0,0,0,0.1);
+}
+
+/* ===== 卡片效果：简约线条 ===== */
+.card-style-minimal .link-card {
+  background: transparent;
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+.card-style-minimal .link-card:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  box-shadow: none;
+}
+
+/* ===== 卡片效果：阴影立体 ===== */
+.card-style-shadow .link-card {
+  background: var(--bg-card);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.05);
+  border: 1px solid var(--border);
+}
+.card-style-shadow .link-card:hover {
+  box-shadow: 0 8px 16px rgba(0,0,0,0.12), 0 12px 32px rgba(0,0,0,0.08);
+  transform: translateY(-3px);
+}
+
 .empty-state {
   text-align: center;
   padding: 60px 20px;
@@ -1179,6 +1281,21 @@ body {
               </select>
               <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">选择主题后立即预览，保存设置后生效</div>
             </div>
+            <div class="form-group" style="margin-top:16px;">
+              <label class="label">卡片效果</label>
+              <select class="input" id="setting-card-style" onchange="previewCardStyle(this.value)">
+                <option value="default">📄 默认样式</option>
+                <option value="embossed">💎 浮雕效果</option>
+                <option value="inset">🕳️ 凹陷效果</option>
+                <option value="glass">🔮 玻璃拟态</option>
+                <option value="neon">✨ 霓虹发光</option>
+                <option value="gradient">🌈 渐变边框</option>
+                <option value="float3d">🚀 3D悬浮</option>
+                <option value="minimal">📋 简约线条</option>
+                <option value="shadow">🎯 阴影立体</option>
+              </select>
+              <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">选择服务卡片显示效果，实时预览</div>
+            </div>
           </div>
           <div style="border-top:1px solid var(--border); margin:20px 0; padding-top:20px;">
             <h3 style="font-size:15px; margin-bottom:16px;">背景设置</h3>
@@ -1532,7 +1649,8 @@ const DEFAULT_DATA = {
     subtitleColor: '',
     footerFont: '',
     footerSize: '',
-    footerColor: ''
+    footerColor: '',
+    cardStyle: 'default'
   },
   categories: [
     { id: 'c1', name: '常用', sort: 0 },
@@ -1876,6 +1994,17 @@ function renderHome() {
   if (!data) return;
   const $ = id => document.getElementById(id);
   if ($('home-loading')) $('home-loading').style.display = 'none';
+  
+  // 应用卡片效果
+  const container = $('grid-container');
+  if (container) {
+    const styles = ['default', 'embossed', 'inset', 'glass', 'neon', 'gradient', 'float3d', 'minimal', 'shadow'];
+    styles.forEach(s => container.classList.remove('card-style-' + s));
+    const cardStyle = data.settings.cardStyle || 'default';
+    if (cardStyle !== 'default') {
+      container.classList.add('card-style-' + cardStyle);
+    }
+  }
   if ($('site-title')) $('site-title').textContent = data.settings.title;
   document.title = data.settings.title || 'NAS 导航';
   applyLogo();
@@ -1995,6 +2124,16 @@ function previewTheme() {
   const root = document.documentElement;
   for (const [key, value] of Object.entries(theme.vars)) {
     root.style.setProperty(key, value);
+  }
+}
+
+function previewCardStyle(style) {
+  const container = document.getElementById('grid-container');
+  if (!container) return;
+  const styles = ['default', 'embossed', 'inset', 'glass', 'neon', 'gradient', 'float3d', 'minimal', 'shadow'];
+  styles.forEach(s => container.classList.remove('card-style-' + s));
+  if (style && style !== 'default') {
+    container.classList.add('card-style-' + style);
   }
 }
 
@@ -3361,6 +3500,7 @@ function loadSettingsForm() {
   document.getElementById('bg-opacity-value').textContent = data.settings.bgOpacity != null ? data.settings.bgOpacity : 100;
   // 主题设置
   document.getElementById('setting-theme').value = data.settings.theme || 'green';
+  document.getElementById('setting-card-style').value = data.settings.cardStyle || 'default';
   // 字体设置
   const fontGroups = ['title', 'subtitle', 'footer'];
   for (const group of fontGroups) {
@@ -3401,6 +3541,7 @@ async function saveSettings() {
   data.settings.logoUrl = document.getElementById('setting-logo-url').value.trim();
   // 主题设置
   data.settings.theme = document.getElementById('setting-theme').value;
+  data.settings.cardStyle = document.getElementById('setting-card-style').value;
   // 背景设置
   data.settings.bgType = document.getElementById('setting-bg-type').value;
   data.settings.bgColor = document.getElementById('setting-bg-color').value;
