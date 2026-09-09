@@ -1023,7 +1023,7 @@ body {
         </div>
         <table class="data-table" id="links-table">
           <thead>
-            <tr><th style="width:36px;"></th><th>图标</th><th>名称</th><th>URL</th><th>分类</th><th>描述</th><th>操作</th></tr>
+            <tr><th style="width:36px;"></th><th>图标</th><th>名称</th><th>URL</th><th>分类</th><th>描述</th><th style="width:60px;text-align:center;">排序</th><th>操作</th></tr>
           </thead>
           <tbody id="links-tbody"></tbody>
         </table>
@@ -2380,6 +2380,74 @@ function handleDragEnd(e) {
   dragState = { type: null, id: null };
 }
 
+// 上移/下移服务（支持跨页）
+async function moveLink(linkId, direction) {
+  if (!data) return;
+  // 获取当前筛选后的列表（和表格显示一致）
+  let filtered = data.links.filter(l => linkFilterCat === 'all' || l.categoryId === linkFilterCat);
+  filtered.sort((a, b) => a.sort - b.sort);
+  
+  const idx = filtered.findIndex(l => l.id === linkId);
+  if (idx === -1) return;
+  
+  const targetIdx = idx + direction;
+  if (targetIdx < 0 || targetIdx >= filtered.length) {
+    toast(direction < 0 ? '已经是第一个' : '已经是最后一个', 'info');
+    return;
+  }
+  
+  // 交换 sort 值
+  const temp = filtered[idx].sort;
+  filtered[idx].sort = filtered[targetIdx].sort;
+  filtered[targetIdx].sort = temp;
+  
+  // 重新排序所有服务的 sort 值（保持连续）
+  data.links.sort((a, b) => a.sort - b.sort);
+  data.links.forEach((l, i) => l.sort = i);
+  
+  // 计算目标所在页并跳转
+  const newIdx = data.links.findIndex(l => l.id === linkId);
+  const targetPage = Math.floor(newIdx / LINK_PAGE_SIZE) + 1;
+  linkPage = targetPage;
+  
+  renderAll();
+  await syncToGithub();
+  toast('排序已保存', 'success');
+}
+
+// 直接输入排序号
+async function updateLinkSort(linkId, newSort) {
+  if (!data) return;
+  newSort = parseInt(newSort);
+  if (isNaN(newSort) || newSort < 0) {
+    toast('请输入有效的排序号', 'error');
+    renderLinksTable();
+    return;
+  }
+  
+  const link = data.links.find(l => l.id === linkId);
+  if (!link) return;
+  
+  // 限制在有效范围内
+  newSort = Math.min(newSort, data.links.length - 1);
+  
+  // 移除该元素，插入到新位置
+  const fromIdx = data.links.findIndex(l => l.id === linkId);
+  const [moved] = data.links.splice(fromIdx, 1);
+  const toIdx = Math.min(newSort, data.links.length);
+  data.links.splice(toIdx, 0, moved);
+  
+  // 重新分配 sort 值
+  data.links.forEach((l, i) => l.sort = i);
+  
+  // 跳转到目标页
+  linkPage = Math.floor(toIdx / LINK_PAGE_SIZE) + 1;
+  
+  renderAll();
+  await syncToGithub();
+  toast('排序已保存', 'success');
+}
+
 function renderLinksTable() {
   if (!data) return;
   const tbody = document.getElementById('links-tbody');
@@ -2424,13 +2492,16 @@ function renderLinksTable() {
     html += '<td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(link.url) + '</td>';
     html += '<td>' + escapeHtml(catMap[link.categoryId] || '未分类') + '</td>';
     html += '<td style="color:var(--text-muted);font-size:13px;">' + escapeHtml(link.desc || '-') + '</td>';
+    html += '<td style="text-align:center;"><input type="number" min="0" value="' + link.sort + '" style="width:50px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center;" onchange="updateLinkSort(\'' + link.id + '\', this.value)" title="输入排序号回车保存"></td>';
     html += '<td><div class="table-actions">';
+    html += '<button class="icon-btn" onclick="moveLink(\'' + link.id + '\', -1)" title="上移"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg></button>';
+    html += '<button class="icon-btn" onclick="moveLink(\'' + link.id + '\', 1)" title="下移"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>';
     html += '<button class="icon-btn" onclick="editLink(\'' + link.id + '\')" title="编辑"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
     html += '<button class="icon-btn danger" onclick="deleteLink(\'' + link.id + '\')" title="删除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>';
     html += '</div></td></tr>';
   });
   if (!html) {
-    html = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">该分类下暂无服务</td></tr>';
+    html = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted);">该分类下暂无服务</td></tr>';
   }
   tbody.innerHTML = html;
 
