@@ -2380,42 +2380,43 @@ function handleDragEnd(e) {
   dragState = { type: null, id: null };
 }
 
-// 上移/下移服务（支持跨页）
+// 上移/下移服务（按分类内排序，支持跨页）
 async function moveLink(linkId, direction) {
   if (!data) return;
-  // 获取当前筛选后的列表（和表格显示一致）
-  let filtered = data.links.filter(l => linkFilterCat === 'all' || l.categoryId === linkFilterCat);
-  filtered.sort((a, b) => a.sort - b.sort);
+  // 获取当前分类内的列表
+  const link = data.links.find(l => l.id === linkId);
+  if (!link) return;
+  const catId = link.categoryId;
   
-  const idx = filtered.findIndex(l => l.id === linkId);
+  let catLinks = data.links.filter(l => l.categoryId === catId);
+  catLinks.sort((a, b) => a.sort - b.sort);
+  
+  const idx = catLinks.findIndex(l => l.id === linkId);
   if (idx === -1) return;
   
   const targetIdx = idx + direction;
-  if (targetIdx < 0 || targetIdx >= filtered.length) {
+  if (targetIdx < 0 || targetIdx >= catLinks.length) {
     toast(direction < 0 ? '已经是第一个' : '已经是最后一个', 'info');
     return;
   }
   
   // 交换 sort 值
-  const temp = filtered[idx].sort;
-  filtered[idx].sort = filtered[targetIdx].sort;
-  filtered[targetIdx].sort = temp;
+  const temp = catLinks[idx].sort;
+  catLinks[idx].sort = catLinks[targetIdx].sort;
+  catLinks[targetIdx].sort = temp;
   
-  // 重新排序所有服务的 sort 值（保持连续）
-  data.links.sort((a, b) => a.sort - b.sort);
-  data.links.forEach((l, i) => l.sort = i);
-  
-  // 计算目标所在页并跳转
-  const newIdx = data.links.findIndex(l => l.id === linkId);
-  const targetPage = Math.floor(newIdx / LINK_PAGE_SIZE) + 1;
-  linkPage = targetPage;
+  // 计算目标在当前筛选列表中的位置，用于分页跳转
+  let filtered = data.links.filter(l => linkFilterCat === 'all' || l.categoryId === linkFilterCat);
+  filtered.sort((a, b) => a.sort - b.sort);
+  const newIdx = filtered.findIndex(l => l.id === linkId);
+  linkPage = Math.floor(newIdx / LINK_PAGE_SIZE) + 1;
   
   renderAll();
   await syncToGithub();
   toast('排序已保存', 'success');
 }
 
-// 直接输入排序号
+// 直接输入排序号（按分类内序号）
 async function updateLinkSort(linkId, newSort) {
   if (!data) return;
   newSort = parseInt(newSort);
@@ -2427,21 +2428,45 @@ async function updateLinkSort(linkId, newSort) {
   
   const link = data.links.find(l => l.id === linkId);
   if (!link) return;
+  const catId = link.categoryId;
   
-  // 限制在有效范围内
-  newSort = Math.min(newSort, data.links.length - 1);
+  // 获取当前分类内的列表
+  let catLinks = data.links.filter(l => l.categoryId === catId);
+  catLinks.sort((a, b) => a.sort - b.sort);
   
-  // 移除该元素，插入到新位置
-  const fromIdx = data.links.findIndex(l => l.id === linkId);
-  const [moved] = data.links.splice(fromIdx, 1);
-  const toIdx = Math.min(newSort, data.links.length);
-  data.links.splice(toIdx, 0, moved);
+  // 限制在分类内有效范围
+  newSort = Math.min(newSort, catLinks.length - 1);
   
-  // 重新分配 sort 值
-  data.links.forEach((l, i) => l.sort = i);
+  // 在分类内移动
+  const fromIdx = catLinks.findIndex(l => l.id === linkId);
+  const [moved] = catLinks.splice(fromIdx, 1);
+  catLinks.splice(newSort, 0, moved);
   
-  // 跳转到目标页
-  linkPage = Math.floor(toIdx / LINK_PAGE_SIZE) + 1;
+  // 重新分配该分类内的 sort 值（保持分类间的相对顺序）
+  // 先获取所有分类，按分类排序
+  const allCats = [...new Set(data.links.map(l => l.categoryId))];
+  let globalSort = 0;
+  allCats.forEach(cid => {
+    const catItems = data.links.filter(l => l.categoryId === cid);
+    if (cid === catId) {
+      // 使用重新排序后的列表
+      catLinks.forEach(l => {
+        const item = data.links.find(x => x.id === l.id);
+        if (item) item.sort = globalSort++;
+      });
+    } else {
+      catItems.sort((a, b) => a.sort - b.sort).forEach(l => {
+        const item = data.links.find(x => x.id === l.id);
+        if (item) item.sort = globalSort++;
+      });
+    }
+  });
+  
+  // 计算目标在当前筛选列表中的位置，用于分页跳转
+  let filtered = data.links.filter(l => linkFilterCat === 'all' || l.categoryId === linkFilterCat);
+  filtered.sort((a, b) => a.sort - b.sort);
+  const newIdx = filtered.findIndex(l => l.id === linkId);
+  linkPage = Math.floor(newIdx / LINK_PAGE_SIZE) + 1;
   
   renderAll();
   await syncToGithub();
@@ -2492,7 +2517,8 @@ function renderLinksTable() {
     html += '<td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(link.url) + '</td>';
     html += '<td>' + escapeHtml(catMap[link.categoryId] || '未分类') + '</td>';
     html += '<td style="color:var(--text-muted);font-size:13px;">' + escapeHtml(link.desc || '-') + '</td>';
-    html += '<td style="text-align:center;"><input type="number" min="0" value="' + link.sort + '" style="width:50px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center;" onchange="updateLinkSort(\'' + link.id + '\', this.value)" title="输入排序号回车保存"></td>';
+    const sortIndexInCat = filtered.findIndex(l => l.id === link.id);
+    html += '<td style="text-align:center;"><input type="number" min="0" max="' + (filtered.length - 1) + '" value="' + sortIndexInCat + '" style="width:50px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center;" onchange="updateLinkSort(\'' + link.id + '\', this.value)" title="分类内排序号，从0开始"></td>';
     html += '<td><div class="table-actions">';
     html += '<button class="icon-btn" onclick="moveLink(\'' + link.id + '\', -1)" title="上移"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg></button>';
     html += '<button class="icon-btn" onclick="moveLink(\'' + link.id + '\', 1)" title="下移"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>';
