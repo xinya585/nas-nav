@@ -1449,6 +1449,10 @@ body {
         <input type="text" class="input" id="link-url">
       </div>
       <div class="form-group">
+        <label class="label">Ping 地址（可选）</label>
+        <input type="text" class="input" id="link-ping-url" placeholder="用于网络状态检测的地址，留空则使用URL地址">
+      </div>
+      <div class="form-group">
         <label class="label">所属分类 *</label>
         <select class="select" id="link-category"></select>
       </div>
@@ -2181,7 +2185,7 @@ function renderGrid() {
       const textIconStyle = hasIconUrl ? ' style="display:none;"' : '';
       const cardClass = 'link-card' + (hasDesc ? '' : ' no-desc');
       html += '<a href="' + escapeAttr(link.url) + '" target="_blank" rel="noopener noreferrer" class="' + cardClass + '" style="--card-accent:' + (link.color || '#059669') + '">';
-      html += '<span class="net-status checking" data-url="' + escapeAttr(link.url) + '" title="检测中..."></span>';
+      html += '<span class="net-status checking" data-url="' + escapeAttr(link.pingUrl || link.url) + '" title="检测中..."></span>';
       html += '<div class="card-icon-wrap">' + iconHtml + '<div class="card-icon"' + textIconStyle + '>' + escapeHtml(iconText) + '</div></div>';
       html += '<div class="card-info">';
       html += '<div class="card-name">' + escapeHtml(link.name) + '</div>';
@@ -2663,6 +2667,7 @@ function openLinkModal() {
   document.getElementById('link-icon-url').value = '';
   document.getElementById('link-color').value = '#FFFFFF';
   document.getElementById('link-url').value = '';
+  document.getElementById('link-ping-url').value = '';
   document.getElementById('link-desc').value = '';
   setIconUploadStatus('', false);
   showIconPreview('');
@@ -2680,6 +2685,7 @@ function editLink(id) {
   document.getElementById('link-icon-url').value = link.iconUrl || '';
   document.getElementById('link-color').value = link.color || '#FFFFFF';
   document.getElementById('link-url').value = link.url;
+  document.getElementById('link-ping-url').value = link.pingUrl || '';
   document.getElementById('link-desc').value = link.desc || '';
   populateCategorySelect(link.categoryId);
   document.getElementById('link-modal').classList.add('active');
@@ -3079,6 +3085,7 @@ async function saveLink() {
   const id = document.getElementById('link-id').value;
   const name = document.getElementById('link-name').value.trim();
   const url = document.getElementById('link-url').value.trim();
+  const pingUrl = document.getElementById('link-ping-url').value.trim();
   const categoryId = document.getElementById('link-category').value;
   if (!name || !url) { toast('请填写名称和 URL', 'error'); return; }
   if (!categoryId) { toast('请先创建分类', 'error'); return; }
@@ -3086,6 +3093,7 @@ async function saveLink() {
   const linkData = {
     name: name,
     url: url,
+    pingUrl: pingUrl,
     icon: document.getElementById('link-icon').value.trim(),
     iconUrl: document.getElementById('link-icon-url').value.trim(),
     color: document.getElementById('link-color').value,
