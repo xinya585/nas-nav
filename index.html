@@ -3617,15 +3617,20 @@ function closeModal(id) {
   document.getElementById(id).classList.remove('active');
 }
 
+// 使用 mousedown 代替 click，避免在 input 内选择文字时误关闭弹窗
+// 原因：文字选择时 mousedown 在 input 内，mouseup 可能落在 overlay 上触发 click
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', function(e) {
-    if (e.target === this) this.classList.remove('active');
+  overlay.addEventListener('mousedown', function(e) {
+    // 只有当鼠标按下的目标是 overlay 本身（不是 modal 内部元素）时才关闭
+    if (e.target === this) {
+      this.classList.remove('active');
+    }
   });
 });
 
-// 阻止弹窗内部点击事件冒泡到遮罩层，防止误关闭
+// 阻止弹窗内部 mousedown 事件冒泡到遮罩层
 document.querySelectorAll('.modal').forEach(modal => {
-  modal.addEventListener('click', function(e) {
+  modal.addEventListener('mousedown', function(e) {
     e.stopPropagation();
   });
 });
